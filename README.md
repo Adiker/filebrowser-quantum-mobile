@@ -265,8 +265,10 @@ API redirects are blocked; image and Android background-transfer requests do not
 follow redirects, and Android video playback rejects cross-protocol redirects.
 HTTP media playback and background transfers require device testing.
 
-Release publication is manual and requires the signing secrets documented in
-`.github/workflows/release.yml`. No debug-signed APK should be distributed.
+Signed APK builds run manually via the Release workflow and require the signing
+secrets documented in `.github/workflows/release.yml`. The APK is uploaded as a
+workflow artifact; publishing a GitHub Release requires selecting the publish
+option. No debug-signed APK should be distributed.
 
 `local_auth` requires the host Activity to extend `FlutterFragmentActivity`, and
 `minSdkVersion` is set to 23+ for biometrics — both are already configured.

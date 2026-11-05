@@ -1,6 +1,7 @@
 name: Release
 
-# Manually publish a signed release APK for the version in pubspec.yaml. The release is keyed on the version *name* (the part before `+`):
+# Manually build a signed release APK; publishing a GitHub Release is opt-in.
+# Releases are keyed on the version name (the part before `+`):
 # if tag v<version> does not exist yet, the workflow builds the APK, creates
 # the tag, and publishes a GitHub Release with the APK attached. Bumping only
 # the build number (after `+`) does not create a release.
@@ -15,6 +16,11 @@ name: Release
 # Releases are opt-in until the repository owner configures signing secrets.
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a GitHub Release after building
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -160,7 +166,7 @@ jobs:
           echo "file=$notes_file" >> "$GITHUB_OUTPUT"
 
       - name: Create tag and GitHub Release
-        if: steps.exists.outputs.released == 'false'
+        if: steps.exists.outputs.released == 'false' && inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
