@@ -74,11 +74,17 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> hasHttpConsent(String baseUrl) async {
+    final normalized = FileBrowserClient(baseUrl: baseUrl).baseUrl;
+    return _store.hasHttpConsent(normalized);
+  }
+
   /// First-run: persist the server URL + credentials, then log in directly.
   Future<void> beginSetup({
     required String baseUrl,
     required String username,
     required String password,
+    bool confirmHttp = false,
   }) async {
     _setStage(AuthStage.busy);
     final String normalized;
@@ -88,7 +94,17 @@ class AuthController extends ChangeNotifier {
       _fail('Invalid server URL: ${_friendly(e)}', AuthStage.needsSetup);
       return;
     }
-    await _store.save(baseUrl: normalized, username: username, password: password);
+    if (Uri.parse(normalized).scheme == 'http' &&
+        !confirmHttp &&
+        !await _store.hasHttpConsent(normalized)) {
+      _fail('Confirm the unencrypted connection before signing in.',
+          AuthStage.needsSetup);
+      return;
+    }
+    await _store.setHttpConsent(
+        Uri.parse(normalized).scheme == 'http' ? normalized : null);
+    await _store.save(
+        baseUrl: normalized, username: username, password: password);
     await _store.clearJwt();
     await _loginAndSelectSource(normalized, username, password,
         onFailure: AuthStage.needsSetup);
@@ -119,6 +135,14 @@ class AuthController extends ChangeNotifier {
         return false;
       }
 
+      if (Uri.parse(creds.baseUrl).scheme == 'http' &&
+          !await _store.hasHttpConsent(creds.baseUrl)) {
+        _fail(
+            'HTTP connection requires confirmation. Use a different server to set it up again.',
+            AuthStage.locked);
+        return false;
+      }
+
       // Reuse a cached token while it is still valid; otherwise log in again.
       final cached = await _store.readJwt();
       if (cached != null && FileBrowserClient.isTokenValid(cached)) {
@@ -127,8 +151,7 @@ class AuthController extends ChangeNotifier {
         return true;
       }
 
-      await _loginAndSelectSource(
-          creds.baseUrl, creds.username, creds.password,
+      await _loginAndSelectSource(creds.baseUrl, creds.username, creds.password,
           onFailure: AuthStage.locked);
       return true;
     } catch (e) {
@@ -260,6 +283,11 @@ class AuthController extends ChangeNotifier {
     if (creds == null) {
       _stage = AuthStage.needsSetup;
       notifyListeners();
+      return;
+    }
+    if (Uri.parse(creds.baseUrl).scheme == 'http' &&
+        !await _store.hasHttpConsent(creds.baseUrl)) {
+      _fail('HTTP connection requires confirmation.', AuthStage.locked);
       return;
     }
     await _loginAndSelectSource(creds.baseUrl, creds.username, creds.password,

@@ -12,8 +12,11 @@ String _b64(Map<String, dynamic> m) =>
 
 /// Build a quantum session JWT with the given expiry (seconds since epoch).
 /// The session token carries a top-level `Permissions` object and no username.
-String makeJwt(int expEpoch) =>
-    '${_b64({'alg': 'HS256'})}.${_b64({'exp': expEpoch, 'iss': 'FileBrowser Quantum', 'Permissions': {'create': true, 'modify': true}})}.sig';
+String makeJwt(int expEpoch) => '${_b64({'alg': 'HS256'})}.${_b64({
+          'exp': expEpoch,
+          'iss': 'FileBrowser Quantum',
+          'Permissions': {'create': true, 'modify': true}
+        })}.sig';
 
 int get _nowS => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
@@ -55,6 +58,20 @@ void main() {
     });
   });
 
+  test('API login rejects redirects instead of forwarding credentials',
+      () async {
+    final adapter =
+        MockAdapter((_) => MockAdapter.text('', status: 302, headers: {
+              'location': ['http://attacker.example/']
+            }));
+    final client =
+        FileBrowserClient(baseUrl: 'https://server.example', adapter: adapter);
+    await expectLater(
+        client.login('user', 'password'), throwsA(isA<DioException>()));
+    expect(adapter.requests, hasLength(1));
+    expect(adapter.requests.single.followRedirects, isFalse);
+  });
+
   group('URL construction', () {
     test('listDirectory carries source + path query params', () async {
       final (client, adapter) = makeClient((_) => MockAdapter.json({
@@ -73,10 +90,9 @@ void main() {
     });
 
     test('search hits /api/tools/search with sources + scope', () async {
-      final (client, adapter) = makeClient(
-          (_) => MockAdapter.json([
-                {'path': '/a.txt', 'type': 'text', 'source': 'mydisk'},
-              ]));
+      final (client, adapter) = makeClient((_) => MockAdapter.json([
+            {'path': '/a.txt', 'type': 'text', 'source': 'mydisk'},
+          ]));
       final hits = await client.search('/My Photos/2024', 'rëport space');
       final uri = adapter.requests.last.uri;
       expect(uri.path, '/api/tools/search');
@@ -258,8 +274,8 @@ void main() {
 
     test('rawBundleDownloadUri repeats file= with full scoped paths', () {
       final (client, _) = makeClient((_) => MockAdapter.text(''));
-      final uri = client
-          .rawBundleDownloadUri('/My Photos', ['a b.jpg', 'rëp,ort.png']);
+      final uri =
+          client.rawBundleDownloadUri('/My Photos', ['a b.jpg', 'rëp,ort.png']);
       expect(uri.path, '/api/resources/download');
       expect(uri.queryParameters['algo'], 'zip');
       // Each file is the full source-scoped path, sent as a repeated param.
@@ -298,8 +314,8 @@ void main() {
         final (client, adapter) = makeClient(
             (_) => MockAdapter.json({'succeeded': [], 'failed': []}));
         await client.copy('/a', '/b', overwrite: true, keepBoth: true);
-        final body =
-            jsonDecode(adapter.requests.last.data as String) as Map<String, dynamic>;
+        final body = jsonDecode(adapter.requests.last.data as String)
+            as Map<String, dynamic>;
         expect(body['action'], 'copy');
         expect(body['overwrite'], true);
         expect(body['rename'], true);
@@ -309,8 +325,8 @@ void main() {
         final (client, adapter) = makeClient(
             (_) => MockAdapter.json({'succeeded': [], 'failed': []}));
         await client.rename('/old name', '/new name');
-        final body =
-            jsonDecode(adapter.requests.last.data as String) as Map<String, dynamic>;
+        final body = jsonDecode(adapter.requests.last.data as String)
+            as Map<String, dynamic>;
         expect(body['action'], 'rename');
         expect((body['items'] as List).single, {
           'fromSource': 'mydisk',
@@ -323,21 +339,27 @@ void main() {
   });
 
   group('base URL policy', () {
-    test('rejects http:// to a non-local host', () {
-      expect(() => FileBrowserClient(baseUrl: 'http://demo.example.com'),
-          throwsArgumentError);
-      expect(FileBrowserClient.isAllowedBaseUrl('http://demo.example.com'),
-          isFalse);
-    });
-
-    test('allows http:// to loopback hosts (dev/test servers)', () {
+    test('allows explicit HTTP for LAN and other servers', () {
       for (final base in [
         'http://localhost:8080',
-        'http://127.0.0.1:8080',
-        'http://10.0.2.2:8080', // emulator alias for its host
+        'http://192.168.1.5:8080',
+        'http://files.lan',
+        'http://demo.example.com',
       ]) {
         expect(FileBrowserClient(baseUrl: base).baseUrl, base);
         expect(FileBrowserClient.isAllowedBaseUrl(base), isTrue);
+      }
+    });
+
+    test('rejects malformed or unsupported server URLs', () {
+      for (final base in [
+        '',
+        'ftp://example.com',
+        'http://',
+        'https://user:pass@example.com',
+        'https://example.com/?q=x'
+      ]) {
+        expect(FileBrowserClient.isAllowedBaseUrl(base), isFalse, reason: base);
       }
     });
 
@@ -357,11 +379,15 @@ void main() {
             : MockAdapter.json({});
       });
       final bytes = Uint8List.fromList(List.generate(256, (i) => i));
-      await client.uploadChunk('/big.apk', sessionId: 'renew-session',
-          offset: 0, totalSize: bytes.length, bytes: bytes);
+      await client.uploadChunk('/big.apk',
+          sessionId: 'renew-session',
+          offset: 0,
+          totalSize: bytes.length,
+          bytes: bytes);
       expect(adapter.bodies.first, bytes);
       expect(adapter.bodies.last, bytes);
-      expect(adapter.requests.last.headers['X-File-Upload-Session'], 'renew-session');
+      expect(adapter.requests.last.headers['X-File-Upload-Session'],
+          'renew-session');
     });
     test('uploadChunk posts raw bytes with offset/total headers', () async {
       final (client, adapter) = makeClient((_) => MockAdapter.json({}));
@@ -454,7 +480,8 @@ void main() {
       expect(expiredFired, isFalse);
     });
 
-    test('401 then failed renew -> SessionExpiredException + callback', () async {
+    test('401 then failed renew -> SessionExpiredException + callback',
+        () async {
       final adapter = MockAdapter((o) {
         if (o.uri.path.endsWith('/api/auth/renew')) {
           return MockAdapter.json({}, status: 401);

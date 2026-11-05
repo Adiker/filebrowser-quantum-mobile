@@ -269,6 +269,10 @@ void main() {
     }
     expect(hits, isNotEmpty, reason: 'search did not index $token in time');
     expect(hits.any((h) => h.path.contains(token)), isTrue);
+    final scoped = await client.search(workDir, token);
+    expect(scoped.any((h) => h.path.contains(token)), isTrue);
+    final elsewhere = await client.search(p('sub'), token);
+    expect(elsewhere.any((h) => h.path.contains(token)), isFalse);
   });
 
   test('share create / list / delete lifecycle', () async {

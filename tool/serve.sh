@@ -3,8 +3,8 @@
 #
 # Downloads the official filebrowser-quantum release (if absent), writes a
 # config, seeds a small data tree, and runs the server on :8080. All generated
-# artifacts live under the gitignored ./.quantum-test/ dir, so the working tree
-# stays clean.
+# artifacts live under ./.quantum-test/ (or FB_TEST_WORK_DIR). Each release
+# has its own binary; choose a fresh work directory for a clean database/config.
 #
 # Usage:
 #   ./tool/serve.sh setup   # idempotent: fetch binary + write config + seed data
@@ -15,12 +15,12 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-WORK="$HERE/.quantum-test"
-BIN="$WORK/fb-official"
+WORK="${FB_TEST_WORK_DIR:-$HERE/.quantum-test}"
 CFG="$WORK/config.yaml"
 DATA="$WORK/fbdata"
 PORT="${FB_TEST_PORT:-8080}"
-REL="${FB_TEST_RELEASE:-v2.0.1-stable}"
+REL="${FB_TEST_RELEASE:-v2.0.2-stable}"
+BIN="$WORK/fb-official-$REL"
 
 # Pick the release asset for this host (assets are named <os>-<arch>-filebrowser).
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -35,8 +35,9 @@ setup() {
   mkdir -p "$WORK"
   if [ ! -x "$BIN" ]; then
     echo "downloading official quantum $REL ..."
-    curl -sSL --max-time 300 -o "$BIN" "$URL"
-    chmod +x "$BIN"
+    curl -fsSL --max-time 300 -o "$BIN.part" "$URL"
+    chmod +x "$BIN.part"
+    mv "$BIN.part" "$BIN"
   fi
   if [ ! -f "$CFG" ]; then
     cat > "$CFG" <<EOF
@@ -90,6 +91,6 @@ PY
 
 case "${1:-run}" in
   setup) setup ;;
-  run)   setup; echo "starting quantum on :$PORT"; exec "$BIN" -c "$CFG" ;;
+  run)   setup; echo "starting quantum on :$PORT"; cd "$WORK"; exec "$BIN" -c "$CFG" ;;
   *)     echo "usage: $0 {setup|run}" >&2; exit 2 ;;
 esac

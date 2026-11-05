@@ -103,41 +103,36 @@ class FileBrowserClient {
     return exp.isAfter(DateTime.now().add(margin));
   }
 
+  /// Normalizes a server address. Explicit HTTP is permitted after the setup
+  /// screen has obtained consent; missing schemes default to HTTPS.
   static String _normalizeBase(String url) {
-    var u = url.trim();
-    // Enforce TLS: an explicit http:// base is rejected (credentials and the
-    // JWT travel in headers and must never go out in cleartext); a schemeless
-    // host defaults to https://. Loopback hosts are exempt — the traffic
-    // never crosses a network — which is what dev setups and the integration
-    // tests (local quantum on :8080) use. Mirrored by the Android
-    // networkSecurityConfig, which likewise permits cleartext only to these
-    // hosts.
-    if (u.startsWith('http://') && !_isLoopback(u)) {
-      throw ArgumentError(
-          'Insecure http:// server URLs are not allowed — use https://.');
+    var value = url.trim();
+    if (!value.contains('://')) value = 'https://$value';
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        !['http', 'https'].contains(uri.scheme.toLowerCase()) ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        uri.hasPort && (uri.port < 1 || uri.port > 65535)) {
+      throw ArgumentError('Enter a valid HTTP or HTTPS server URL.');
     }
-    if (!u.startsWith('http://') && !u.startsWith('https://')) {
-      u = 'https://$u';
-    }
-    return u.endsWith('/') ? u.substring(0, u.length - 1) : u;
+    return uri
+        .replace(scheme: uri.scheme.toLowerCase())
+        .toString()
+        .replaceFirst(RegExp(r'/+$'), '');
   }
 
-  /// True when [url]'s host is local to the machine (or, for `10.0.2.2`, the
-  /// Android emulator's alias for its host), so cleartext cannot leave it.
-  static bool _isLoopback(String url) {
-    final host = Uri.tryParse(url.trim())?.host ?? '';
-    return host == 'localhost' ||
-        host == '127.0.0.1' ||
-        host == '::1' ||
-        host == '10.0.2.2';
-  }
-
-  /// Whether [url] is an acceptable server URL: https://, schemeless, or
-  /// http:// to a loopback host. Used by the login form to reject cleartext
-  /// before setup.
   static bool isAllowedBaseUrl(String url) {
-    final u = url.trim().toLowerCase();
-    return !u.startsWith('http://') || _isLoopback(u);
+    try {
+      _normalizeBase(url);
+      return true;
+    } on FormatException {
+      return false;
+    } on ArgumentError {
+      return false;
+    }
   }
 
   /// Builds `<base>/api/<segment>` (no trailing slash).
@@ -170,7 +165,8 @@ class FileBrowserClient {
   /// Quantum takes the username via query and the password (URL-encoded) and
   /// optional TOTP code via the `X-Password`/`X-Secret` headers; the JWT comes
   /// back as a plain-text body.
-  Future<FbUser> login(String username, String password, {String otp = ''}) async {
+  Future<FbUser> login(String username, String password,
+      {String otp = ''}) async {
     final resp = await _dio.postUri(
       _endpoint('auth/login')
           .replace(queryParameters: {'username': username, 'recaptcha': ''}),
@@ -249,7 +245,10 @@ class FileBrowserClient {
     final isRenew = req.extra[_kRenewMarker] == true;
     final alreadyRetried = req.extra[_kRetriedMarker] == true;
 
-    if (!is401 || !wasAuthenticated || isRenew || alreadyRetried ||
+    if (!is401 ||
+        !wasAuthenticated ||
+        isRenew ||
+        alreadyRetried ||
         _token == null) {
       handler.next(err);
       return;
@@ -375,10 +374,14 @@ class FileBrowserClient {
   /// Upload target URL: `POST` here with the file's raw bytes as the body.
   /// The server replies 409 Conflict when the path exists and [override] is
   /// false.
-  Uri uploadUri(String path, {bool override = true, String? sourceName}) => _scopedUri(
+  Uri uploadUri(String path, {bool override = true, String? sourceName}) =>
+      _scopedUri(
         'resources',
-        {'path': path, 'override': override.toString(),
-          if (sourceName != null) 'source': sourceName},
+        {
+          'path': path,
+          'override': override.toString(),
+          if (sourceName != null) 'source': sourceName
+        },
       );
 
   /// Uploads one chunk of a chunked (resumable) upload.
@@ -439,8 +442,8 @@ class FileBrowserClient {
   /// in-flight chunk request.
   Future<void> pauseUpload(String path, {String? sourceName}) async {
     await _dio.postUri(
-      _scopedUri('resources/pause', {'path': path,
-        if (sourceName != null) 'source': sourceName}),
+      _scopedUri('resources/pause',
+          {'path': path, if (sourceName != null) 'source': sourceName}),
       options: _authOptions(),
     );
   }
@@ -491,7 +494,8 @@ class FileBrowserClient {
         'overwrite': overwrite,
         'rename': keepBoth,
       }),
-      options: Options(headers: _bearer(), contentType: Headers.jsonContentType),
+      options:
+          Options(headers: _bearer(), contentType: Headers.jsonContentType),
     );
   }
 
@@ -519,13 +523,14 @@ class FileBrowserClient {
     final qp = <String, dynamic>{
       'query': query,
       if (_source != null) 'sources': _source,
-        if (_source != null) 'scope': '$_source:$base',
+      if (_source != null) 'scope': '$_source:$base',
     };
     final resp = await _dio.getUri(
       _endpoint('tools/search').replace(queryParameters: qp),
       options: _authOptions(),
     );
-    final data = resp.data is String ? jsonDecode(resp.data as String) : resp.data;
+    final data =
+        resp.data is String ? jsonDecode(resp.data as String) : resp.data;
     if (data is! List) return const [];
     return data
         .whereType<Map>()
@@ -590,7 +595,8 @@ class FileBrowserClient {
         'expires': expires ?? '',
         'unit': unit ?? '',
       }),
-      options: Options(headers: _bearer(), contentType: Headers.jsonContentType),
+      options:
+          Options(headers: _bearer(), contentType: Headers.jsonContentType),
     );
     return FbShare.fromJson(_asMap(resp.data));
   }
@@ -658,9 +664,9 @@ class FileBrowserClient {
     final parts = jwt.split('.');
     if (parts.length != 3) return null;
     try {
-      final payload =
-          jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))))
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+              utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))))
+          as Map<String, dynamic>;
       final exp = payload['exp'];
       if (exp is! num) return null;
       return DateTime.fromMillisecondsSinceEpoch((exp * 1000).toInt());

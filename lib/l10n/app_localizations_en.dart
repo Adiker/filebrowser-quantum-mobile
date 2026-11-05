@@ -90,8 +90,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginValidationRequired => 'Required';
 
   @override
-  String get loginValidationHttpsOnly =>
-      'Use https:// — insecure http:// is not allowed';
+  String get loginValidationUrl => 'Enter a valid HTTP or HTTPS server URL';
+
+  @override
+  String get loginHttpWarningTitle => 'Unencrypted connection';
+
+  @override
+  String get loginHttpWarningBody =>
+      'Your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.';
+
+  @override
+  String get loginHttpCancel => 'Cancel';
+
+  @override
+  String get loginHttpConfirm => 'Connect over HTTP';
 
   @override
   String get loginContinue => 'Continue';

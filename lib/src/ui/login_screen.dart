@@ -31,11 +31,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
-    await context.read<AuthController>().beginSetup(
-          baseUrl: _url.text,
-          username: _user.text,
-          password: _pass.text,
-        );
+    final auth = context.read<AuthController>();
+    final loc = AppLocalizations.of(context);
+    final url = _url.text;
+    var confirmed = false;
+    if (Uri.parse(FileBrowserClient(baseUrl: url).baseUrl).scheme == 'http' &&
+        !await auth.hasHttpConsent(url)) {
+      if (!mounted) return;
+      confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(loc.loginHttpWarningTitle),
+              content: Text(loc.loginHttpWarningBody),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(loc.loginHttpCancel)),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(loc.loginHttpConfirm)),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirmed) return;
+    }
+    if (!mounted) return;
+    await auth.beginSetup(
+      baseUrl: url,
+      username: _user.text,
+      password: _pass.text,
+      confirmHttp: confirmed,
+    );
   }
 
   @override
@@ -69,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         return loc.loginValidationRequired;
                       }
                       if (!FileBrowserClient.isAllowedBaseUrl(v)) {
-                        return loc.loginValidationHttpsOnly;
+                        return loc.loginValidationUrl;
                       }
                       return null;
                     },
@@ -106,7 +133,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   if (auth.error != null) ...[
                     Text(auth.error!,
-                        style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                     const SizedBox(height: 12),
                   ],
                   SizedBox(
@@ -155,12 +183,14 @@ class LockScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(auth.error!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
               ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed:
-                  busy ? null : () => context.read<AuthController>().unlockWithBiometrics(),
+              onPressed: busy
+                  ? null
+                  : () => context.read<AuthController>().unlockWithBiometrics(),
               icon: const Icon(Icons.fingerprint),
               label: Text(loc.lockUnlock),
             ),
@@ -188,7 +218,8 @@ class SourceSelectScreen extends StatelessWidget {
     final auth = context.watch<AuthController>();
     final sources = auth.availableSources;
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).sourceSelectTitle)),
+      appBar:
+          AppBar(title: Text(AppLocalizations.of(context).sourceSelectTitle)),
       body: ListView.separated(
         itemCount: sources.length,
         separatorBuilder: (_, __) => const Divider(height: 1),

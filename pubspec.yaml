@@ -18,6 +18,8 @@ dependencies:
 
   # In-app media: gallery grid thumbnails, zoomable photo viewer, video player
   cached_network_image: ^3.4.0
+  flutter_cache_manager: ^3.5.0
+  http: ^1.6.0
   photo_view: ^0.15.0
   video_player: ^2.9.0
   chewie: ^1.8.0
@@ -60,3 +62,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+# Block HTTPS-to-HTTP redirects in Android media playback.
+dependency_overrides:
+  video_player_android:
+    path: third_party/video_player_android

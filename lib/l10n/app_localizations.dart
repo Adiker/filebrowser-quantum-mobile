@@ -256,11 +256,35 @@ abstract class AppLocalizations {
   /// **'Required'**
   String get loginValidationRequired;
 
-  /// Validator message when the server URL is not https
+  /// Validator message for an invalid server URL
   ///
   /// In en, this message translates to:
-  /// **'Use https:// — insecure http:// is not allowed'**
-  String get loginValidationHttpsOnly;
+  /// **'Enter a valid HTTP or HTTPS server URL'**
+  String get loginValidationUrl;
+
+  /// No description provided for @loginHttpWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted connection'**
+  String get loginHttpWarningTitle;
+
+  /// No description provided for @loginHttpWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.'**
+  String get loginHttpWarningBody;
+
+  /// No description provided for @loginHttpCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get loginHttpCancel;
+
+  /// No description provided for @loginHttpConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect over HTTP'**
+  String get loginHttpConfirm;
 
   /// Login submit button
   ///

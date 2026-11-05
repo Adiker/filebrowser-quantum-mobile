@@ -44,8 +44,21 @@ jobs:
           name: lcov
           path: coverage/lcov.info
 
+  # Compile native Android code and plugins without publishing the debug APK.
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug
+
   # End-to-end: run the integration-tagged API tests against a real quantum
-  # server (the official v1.4.0-stable release).
+  # server (the official v2.0.2-stable release).
   integration:
     runs-on: ubuntu-latest
     env:

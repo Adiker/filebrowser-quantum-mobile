@@ -1,3 +1,4 @@
+import '../api/safe_image_cache.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -259,6 +260,7 @@ class _ResultTile extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               CachedNetworkImage(
+            cacheManager: safeImageCache,
                 imageUrl: client.previewUri(absolutePath).toString(),
                 httpHeaders: client.authHeaders,
                 fit: BoxFit.cover,

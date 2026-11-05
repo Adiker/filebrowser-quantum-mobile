@@ -1,7 +1,6 @@
 name: Release
 
-# Publish a signed release APK whenever the version in pubspec.yaml is bumped
-# on main. The release is keyed on the version *name* (the part before `+`):
+# Manually publish a signed release APK for the version in pubspec.yaml. The release is keyed on the version *name* (the part before `+`):
 # if tag v<version> does not exist yet, the workflow builds the APK, creates
 # the tag, and publishes a GitHub Release with the APK attached. Bumping only
 # the build number (after `+`) does not create a release.
@@ -13,10 +12,8 @@ name: Release
 #   ANDROID_KEY_ALIAS          key alias
 #   ANDROID_KEY_PASSWORD       key password
 
+# Releases are opt-in until the repository owner configures signing secrets.
 on:
-  push:
-    branches: [main]
-    paths: [pubspec.yaml]
   workflow_dispatch:
 
 permissions:

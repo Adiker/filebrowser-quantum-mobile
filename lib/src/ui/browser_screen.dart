@@ -1,3 +1,4 @@
+import '../api/safe_image_cache.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -1245,6 +1246,7 @@ class _GalleryTile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           CachedNetworkImage(
+            cacheManager: safeImageCache,
             // Grid previews should not retain full-resolution decoded images.
             memCacheWidth: 384,
             imageUrl: client.previewUri(item.path).toString(),

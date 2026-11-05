@@ -18,6 +18,7 @@ class SecureStore {
   static const _kUsername = 'fb_username';
   static const _kPassword = 'fb_password';
   static const _kJwt = 'fb_jwt';
+  static const _kHttpConsent = 'fb_http_consent_url';
 
   Future<bool> get hasCredentials async {
     final values = await _storage.readAll();
@@ -42,6 +43,18 @@ class SecureStore {
     final password = await _storage.read(key: _kPassword);
     if (baseUrl == null || username == null || password == null) return null;
     return (baseUrl: baseUrl, username: username, password: password);
+  }
+
+  /// Consent is tied to the exact normalized server URL, not a global switch.
+  Future<bool> hasHttpConsent(String baseUrl) async =>
+      await _storage.read(key: _kHttpConsent) == baseUrl;
+
+  Future<void> setHttpConsent(String? baseUrl) async {
+    if (baseUrl == null) {
+      await _storage.delete(key: _kHttpConsent);
+    } else {
+      await _storage.write(key: _kHttpConsent, value: baseUrl);
+    }
   }
 
   /// The cached JWT (kept fresh via renew). Null until a login succeeds.

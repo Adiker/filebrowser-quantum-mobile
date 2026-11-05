@@ -1,9 +1,9 @@
-> Unofficial rpmlourenco fork. Version 0.4.1 fixes Quantum 2.0.1 large-file uploads and uses the official Quantum icon. The APK installs alongside the upstream app because this fork has its own signing key and package ID. Sign in again after installing. Upstream: https://github.com/jjshoots/filebrowser_mobile.
+> Based on [jjshoots/filebrowser_mobile](https://github.com/jjshoots/filebrowser_mobile) and [rpmlourenco/filebrowser_mobile](https://github.com/rpmlourenco/filebrowser_mobile). This independent client has its own Android application ID; existing installations require a fresh sign-in.
 
 # Filebrowser Quantum — Android client (Flutter)
 
-[![CI](https://github.com/rpmlourenco/filebrowser_mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/rpmlourenco/filebrowser_mobile/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/jjshoots/filebrowser_mobile)](https://github.com/rpmlourenco/filebrowser_mobile/releases/latest)
+[![CI](https://github.com/Adiker/filebrowser-quantum-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/Adiker/filebrowser-quantum-mobile/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/Adiker/filebrowser-quantum-mobile)](https://github.com/Adiker/filebrowser-quantum-mobile/releases/latest)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 An Android app for [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) —
@@ -18,7 +18,7 @@ clean and the test suite is green).
 
 ## Install
 
-Grab the APK from the [latest release](https://github.com/rpmlourenco/filebrowser_mobile/releases/latest)
+If available, grab the APK from the [latest release](https://github.com/Adiker/filebrowser-quantum-mobile/releases/latest)
 and sideload it, or build from source (see [Build & run](#build--run)). You
 need a running [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser)
 server to connect to.
@@ -227,9 +227,10 @@ when flutter isn't already resolvable):
   delete, 409 conflict, search, and share create/list/delete. They are
   skip-by-default (`dart_test.yaml`) so a normal `flutter test` needs no server;
   opt in with `flutter test --tags integration --run-skipped`.
-- **`tool/serve.sh {setup|run}`** downloads the official quantum release binary,
+- **`tool/serve.sh {setup|run}`** downloads the official Quantum v2.0.2-stable binary by default (override with `FB_TEST_RELEASE`),
   writes a config, seeds a small data tree, and runs the server on `:8080`. All
-  artifacts land under the gitignored `.quantum-test/`.
+  artifacts land under the gitignored `.quantum-test/`; set an absolute
+  `FB_TEST_WORK_DIR` to use an isolated database and configuration.
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs on push/PR: a fast `unit`
   job (pub get → analyze → `flutter test --exclude-tags integration`) and an
   `integration` job that boots the quantum server via `tool/serve.sh` and runs the
@@ -252,12 +253,20 @@ when flutter isn't already resolvable):
   `background_downloader` foreground service).
 - **Share-into-app intent filters** on `MainActivity`: `SEND` and `SEND_MULTIPLE`
   for `image/*`, `video/*`, `audio/*`, and `application/*`.
-- A `networkSecurityConfig` that **denies cleartext traffic app-wide** — the
-  server URL must be `https://`, except for loopback hosts (`localhost`,
-  `127.0.0.1`, and the emulator's `10.0.2.2`), where traffic never crosses a
-  network — used by dev setups and the integration tests. Backup and
-  device-to-device transfer are likewise disabled (`allowBackup="false"` +
-  data-extraction rules), since app storage holds Keystore-wrapped credentials.
+- HTTP connections are supported after explicit confirmation for the configured
+  server URL. Passwords, session tokens and file data are unencrypted over HTTP;
+  use a trusted network. URLs without a scheme default to HTTPS. API redirects
+  are rejected, including HTTPS-to-HTTP redirects. Backup and device-to-device
+  transfer are disabled because storage holds credentials.
+
+Authentication currently supports direct username/password login. The login
+screen does not support interactive TOTP, OIDC, passkeys, or proxy-based login.
+API redirects are blocked; image and Android background-transfer requests do not
+follow redirects, and Android video playback rejects cross-protocol redirects.
+HTTP media playback and background transfers require device testing.
+
+Release publication is manual and requires the signing secrets documented in
+`.github/workflows/release.yml`. No debug-signed APK should be distributed.
 
 `local_auth` requires the host Activity to extend `FlutterFragmentActivity`, and
 `minSdkVersion` is set to 23+ for biometrics — both are already configured.
@@ -269,7 +278,7 @@ when flutter isn't already resolvable):
   needs the app alive; Android may stop it if the app is killed in the
   background. A transport error mid-chunk makes the server discard its partial
   file, so the automatic retry restarts from the beginning — only the graceful
-  in-app pause preserves the server-side partial for resume (v1.4.0 has no
+  in-app pause preserves the server-side partial for resume (the server has no
   endpoint to query the server's offset).
 - **Downloads / save location** rely on Android SAF and scoped storage; the
   exact destination depends on the folder you grant, and behaviour varies by

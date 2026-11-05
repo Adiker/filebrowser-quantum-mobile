@@ -1,3 +1,4 @@
+import '../api/safe_image_cache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -128,6 +129,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
           final item = _images[i];
           return PhotoViewGalleryPageOptions(
             imageProvider: CachedNetworkImageProvider(
+              cacheManager: safeImageCache,
               widget.client.previewUri(item.path, size: 'large').toString(),
               headers: widget.client.authHeaders,
             ),

@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Enforce TLS for all traffic: cleartext (http://) is denied app-wide.
-     The app talks only to the user's own https:// File Browser server.
-     Loopback hosts are the one exception (mirroring the client-side check in
-     FileBrowserClient): that traffic never leaves the device/emulator, and a
-     dev running `tool/serve.sh` reaches it as http://10.0.2.2:8080. -->
+<!-- HTTP servers are user-configurable; the app requires explicit consent. -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">localhost</domain>
-        <domain includeSubdomains="false">127.0.0.1</domain>
-        <domain includeSubdomains="false">10.0.2.2</domain>
-    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>
