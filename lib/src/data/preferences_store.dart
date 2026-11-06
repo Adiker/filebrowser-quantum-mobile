@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 
+enum BrowserViewMode { grid, list }
+
 enum AppearanceMode { system, light, dark }
 
 enum AppearanceColor { system, indigo, blue, teal, green, orange, pink }
@@ -24,6 +26,32 @@ class PreferencesStore {
   static const _kSortAsc = 'pref_sort_asc';
   static const _kDownloadDir = 'pref_download_dir';
   static const _kSourceName = 'pref_source_name';
+  static const _kViewMode = 'pref_view_mode';
+  static const _kGridSize = 'pref_grid_size';
+  static const _kListSize = 'pref_list_size';
+
+  BrowserViewMode get viewMode => BrowserViewMode.values.firstWhere(
+        (mode) => mode.name == _prefs.get(_kViewMode),
+        orElse: () => BrowserViewMode.grid,
+      );
+
+  Future<void> setViewMode(BrowserViewMode mode) async =>
+      _prefs.setString(_kViewMode, mode.name);
+
+  // Sizes are normalized to the slider range and validated on read.
+  double viewSize(BrowserViewMode mode) {
+    final value =
+        _prefs.get(mode == BrowserViewMode.grid ? _kGridSize : _kListSize);
+    return value is double && value.isFinite && value >= 0 && value <= 1
+        ? value
+        : 0.5;
+  }
+
+  Future<void> setViewSize(BrowserViewMode mode, double value) async {
+    final safe = value.isFinite ? value.clamp(0.0, 1.0) : 0.5;
+    await _prefs.setDouble(
+        mode == BrowserViewMode.grid ? _kGridSize : _kListSize, safe);
+  }
 
   AppearanceMode get appearanceMode => AppearanceMode.values.firstWhere(
         (value) => value.name == _prefs.get('pref_appearance_mode'),

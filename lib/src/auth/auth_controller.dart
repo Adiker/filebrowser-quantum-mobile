@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -36,14 +39,18 @@ class AuthController extends ChangeNotifier {
     SecureStore? store,
     LocalAuthentication? localAuth,
     Future<void> Function()? onForget,
+    FileBrowserClient Function(String)? clientFactory,
   })  : _prefs = prefs,
         _store = store ?? SecureStore(),
         _localAuth = localAuth ?? LocalAuthentication(),
-        _onForget = onForget;
+        _onForget = onForget,
+        _clientFactory =
+            clientFactory ?? ((url) => FileBrowserClient(baseUrl: url));
 
   final PreferencesStore _prefs;
   final SecureStore _store;
   final LocalAuthentication _localAuth;
+  final FileBrowserClient Function(String) _clientFactory;
 
   /// Invoked on "sign out & forget" so dependent services (e.g. the transfer
   /// service's persisted task database, which caches auth headers) can wipe
@@ -55,6 +62,10 @@ class AuthController extends ChangeNotifier {
 
   String? _error;
   String? get error => _error;
+
+  /// True only when the latest login failed at the connection or TLS layer.
+  bool _loginConnectionFailed = false;
+  bool get loginConnectionFailed => _loginConnectionFailed;
 
   FileBrowserClient? _client;
   FileBrowserClient? get client => _client;
@@ -101,8 +112,9 @@ class AuthController extends ChangeNotifier {
           AuthStage.needsSetup);
       return;
     }
-    await _store.setHttpConsent(
-        Uri.parse(normalized).scheme == 'http' ? normalized : null);
+    if (Uri.parse(normalized).scheme == 'http') {
+      await _store.setHttpConsent(normalized);
+    }
     await _store.save(
         baseUrl: normalized, username: username, password: password);
     await _store.clearJwt();
@@ -168,6 +180,17 @@ class AuthController extends ChangeNotifier {
     _setStage(AuthStage.authenticated);
   }
 
+  /// Changes the browsing source without replacing the authenticated session.
+  Future<void> switchSource(String name) async {
+    final activeClient = client;
+    if (activeClient == null || activeClient.source == name) return;
+    await _prefs.setSourceName(name);
+    if (identical(client, activeClient)) {
+      activeClient.setSource(name);
+      notifyListeners();
+    }
+  }
+
   Future<void> signOut({bool forget = false}) async {
     if (forget) {
       await _store.clear();
@@ -210,8 +233,20 @@ class AuthController extends ChangeNotifier {
     required AuthStage onFailure,
   }) async {
     try {
-      final client = FileBrowserClient(baseUrl: baseUrl);
-      final user = await client.login(username, password);
+      final client = _clientFactory(baseUrl);
+      final FbUser user;
+      try {
+        user = await client.login(username, password);
+      } on DioException catch (e) {
+        _loginConnectionFailed = e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.sendTimeout ||
+            e.type == DioExceptionType.badCertificate ||
+            (e.type == DioExceptionType.unknown &&
+                (e.error is SocketException || e.error is TlsException));
+        rethrow;
+      }
       _wireClient(client);
       _user = user;
       await _store.saveJwt(client.token!);
@@ -297,6 +332,7 @@ class AuthController extends ChangeNotifier {
   void _setStage(AuthStage s) {
     _stage = s;
     _error = null;
+    _loginConnectionFailed = false;
     notifyListeners();
   }
 

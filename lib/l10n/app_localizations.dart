@@ -62,7 +62,7 @@ import 'app_localizations_en.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -85,11 +85,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
@@ -262,6 +262,18 @@ abstract class AppLocalizations {
   /// **'Enter a valid HTTP or HTTPS server URL'**
   String get loginValidationUrl;
 
+  /// No description provided for @loginHttpsFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS connection failed'**
+  String get loginHttpsFailedTitle;
+
+  /// No description provided for @loginHttpsFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect securely. You can try {url}, but your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.'**
+  String loginHttpsFailedBody(String url);
+
   /// No description provided for @loginHttpWarningTitle.
   ///
   /// In en, this message translates to:
@@ -328,6 +340,36 @@ abstract class AppLocalizations {
   /// **'Choose a source'**
   String get sourceSelectTitle;
 
+  /// No description provided for @sourceChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change source'**
+  String get sourceChange;
+
+  /// No description provided for @sourceCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current source: {name}'**
+  String sourceCurrent(String name);
+
+  /// No description provided for @sourceLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load sources. Please try again.'**
+  String get sourceLoadError;
+
+  /// No description provided for @sourceChangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change source. Please try again.'**
+  String get sourceChangeError;
+
+  /// No description provided for @sourceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sources are available.'**
+  String get sourceEmpty;
+
   /// Lock action labelled with the signed-in username
   ///
   /// In en, this message translates to:
@@ -369,6 +411,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More options'**
   String get browserMoreOptionsTooltip;
+
+  /// No description provided for @browserViewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'View options'**
+  String get browserViewTooltip;
+
+  /// No description provided for @browserViewGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get browserViewGrid;
+
+  /// No description provided for @browserViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get browserViewList;
+
+  /// No description provided for @browserViewSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Item size'**
+  String get browserViewSize;
 
   /// Sort menu: by name
   ///
@@ -584,8 +650,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{verb} {succeeded}, skipped {skipped}; {failedCount} failed:\n{failures}'**
-  String browserBatchFailedSummary(String verb, int succeeded, int skipped,
-      int failedCount, String failures);
+  String browserBatchFailedSummary(
+    String verb,
+    int succeeded,
+    int skipped,
+    int failedCount,
+    String failures,
+  );
 
   /// Batch move/copy summary when the user aborted mid-batch
   ///
@@ -598,7 +669,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{verb} {succeeded} item(s){skippedSuffix}'**
   String browserBatchDoneSummary(
-      String verb, int succeeded, String skippedSuffix);
+    String verb,
+    int succeeded,
+    String skippedSuffix,
+  );
 
   /// Suffix appended to the batch success summary when items were skipped
   ///
@@ -1370,8 +1444,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

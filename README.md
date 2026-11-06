@@ -48,7 +48,7 @@ server to connect to.
   is auto-selected; with several, a source picker is shown and the choice is
   remembered. Every path-scoped request carries the current `source`.
 - **Browse**
-  - Directory listing with **breadcrumb** navigation.
+  - Directory listing with **breadcrumb** navigation, switchable **list / grid** views and separately adjustable, persisted item sizes.
   - **Persisted sort** by name / size / date (client-side, natural order),
     remembered across launches (`shared_preferences`).
   - **Multiselect** with batch **copy / move / delete / download**, plus a
