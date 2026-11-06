@@ -743,6 +743,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transfersStatusCanceled => 'Canceled';
 
   @override
+  String get appearanceTitle => 'Appearance';
+
+  @override
+  String get appearanceMode => 'Theme';
+
+  @override
+  String get appearanceSystem => 'System default';
+
+  @override
+  String get appearanceLight => 'Light';
+
+  @override
+  String get appearanceDark => 'Dark';
+
+  @override
+  String get appearanceAmoled => 'AMOLED black';
+
+  @override
+  String get appearanceAmoledHint => 'Use a black background in dark mode';
+
+  @override
+  String get appearanceColor => 'Accent color';
+
+  @override
+  String get appearanceDynamic => 'Material You (system colors)';
+
+  @override
+  String get appearanceDynamicHint =>
+      'Uses indigo when system colors are unavailable';
+
+  @override
+  String get appearanceIndigo => 'Indigo';
+
+  @override
+  String get appearanceBlue => 'Blue';
+
+  @override
+  String get appearanceTeal => 'Teal';
+
+  @override
+  String get appearanceGreen => 'Green';
+
+  @override
+  String get appearanceOrange => 'Orange';
+
+  @override
+  String get appearancePink => 'Pink';
+
+  @override
   String videoCouldNotPlay(String error) {
     return 'Could not play video:\n$error';
   }
