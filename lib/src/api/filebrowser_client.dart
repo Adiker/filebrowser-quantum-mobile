@@ -140,10 +140,11 @@ class FileBrowserClient {
 
   /// Builds `<base>/api/<segment>?source=<S>&...`. The current [source] is
   /// always injected first; [extra] adds the call-specific params (path, etc.).
-  Uri _scopedUri(String segment, [Map<String, dynamic>? extra]) {
+  Uri _scopedUri(String segment,
+      [Map<String, dynamic>? extra, bool useCurrentSource = true]) {
     final qp = <String, dynamic>{};
     final s = _source;
-    if (s != null && s.isNotEmpty) qp['source'] = s;
+    if (useCurrentSource && s != null && s.isNotEmpty) qp['source'] = s;
     if (extra != null) qp.addAll(extra);
     return _endpoint(segment).replace(queryParameters: qp);
   }
@@ -374,7 +375,10 @@ class FileBrowserClient {
   /// Upload target URL: `POST` here with the file's raw bytes as the body.
   /// The server replies 409 Conflict when the path exists and [override] is
   /// false.
-  Uri uploadUri(String path, {bool override = true, String? sourceName}) =>
+  Uri uploadUri(String path,
+          {bool override = true,
+          String? sourceName,
+          bool fixedSource = false}) =>
       _scopedUri(
         'resources',
         {
@@ -382,6 +386,7 @@ class FileBrowserClient {
           'override': override.toString(),
           if (sourceName != null) 'source': sourceName
         },
+        !fixedSource,
       );
 
   /// Uploads one chunk of a chunked (resumable) upload.
@@ -411,13 +416,15 @@ class FileBrowserClient {
     required Uint8List bytes,
     required String sessionId,
     String? sourceName,
+    bool fixedSource = false,
     bool override = false,
     void Function(int sent, int total)? onSendProgress,
     CancelToken? cancelToken,
   }) async {
     await renewIfNeeded();
     await _dio.postUri(
-      uploadUri(path, override: override, sourceName: sourceName),
+      uploadUri(path,
+          override: override, sourceName: sourceName, fixedSource: fixedSource),
       data: Stream<Uint8List>.fromIterable([bytes]),
       options: Options(
         extra: {_kUploadBytes: bytes},
@@ -440,10 +447,13 @@ class FileBrowserClient {
   /// back to the last committed offset and *preserves* the temp file, so the
   /// upload can resume from that offset. Call this right before aborting the
   /// in-flight chunk request.
-  Future<void> pauseUpload(String path, {String? sourceName}) async {
+  Future<void> pauseUpload(String path,
+      {String? sourceName, bool fixedSource = false}) async {
     await _dio.postUri(
-      _scopedUri('resources/pause',
-          {'path': path, if (sourceName != null) 'source': sourceName}),
+      _scopedUri(
+          'resources/pause',
+          {'path': path, if (sourceName != null) 'source': sourceName},
+          !fixedSource),
       options: _authOptions(),
     );
   }

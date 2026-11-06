@@ -133,7 +133,8 @@ class ChunkedUploadTask {
     if (_status != TransferStatus.running) return;
     _pauseRequested = true;
     try {
-      await _client.pauseUpload(remotePath, sourceName: _source);
+      await _client.pauseUpload(remotePath,
+          sourceName: _source, fixedSource: true);
     } on DioException {
       // The signal is best-effort: without it an aborted chunk just costs a
       // restart from 0 on resume. Never continue from an unconfirmed offset.
@@ -188,6 +189,7 @@ class ChunkedUploadTask {
             bytes: bytes,
             sessionId: _id,
             sourceName: _source,
+            fixedSource: true,
             override: override,
             cancelToken: token,
             onSendProgress: (sent, _) => _emitThrottled(
@@ -254,8 +256,7 @@ class ChunkedUploadTask {
     _emit(status == TransferStatus.complete ? 1.0 : _progress());
   }
 
-  double _progress() =>
-      _total <= 0 ? 0 : (_committed / _total).clamp(0.0, 1.0);
+  double _progress() => _total <= 0 ? 0 : (_committed / _total).clamp(0.0, 1.0);
 
   double _lastEmitted = -1;
 

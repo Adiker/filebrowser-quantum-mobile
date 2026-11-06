@@ -127,6 +127,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceSelectTitle => 'Choose a source';
 
   @override
+  String get sourceChange => 'Change source';
+
+  @override
+  String sourceCurrent(String name) {
+    return 'Current source: $name';
+  }
+
+  @override
+  String get sourceLoadError => 'Could not load sources. Please try again.';
+
+  @override
+  String get sourceChangeError => 'Could not change source. Please try again.';
+
+  @override
+  String get sourceEmpty => 'No sources are available.';
+
+  @override
   String lockWithUser(String username) {
     return 'Lock ($username)';
   }
@@ -281,8 +298,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browserVerbCopied => 'Copied';
 
   @override
-  String browserBatchFailedSummary(String verb, int succeeded, int skipped,
-      int failedCount, String failures) {
+  String browserBatchFailedSummary(
+    String verb,
+    int succeeded,
+    int skipped,
+    int failedCount,
+    String failures,
+  ) {
     return '$verb $succeeded, skipped $skipped; $failedCount failed:\n$failures';
   }
 
@@ -293,7 +315,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String browserBatchDoneSummary(
-      String verb, int succeeded, String skippedSuffix) {
+    String verb,
+    int succeeded,
+    String skippedSuffix,
+  ) {
     return '$verb $succeeded item(s)$skippedSuffix';
   }
 
