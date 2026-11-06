@@ -113,4 +113,59 @@ void main() {
     // Same row (3-column grid); b precedes a horizontally under size-desc.
     expect(bPos.dx, lessThan(aPos.dx));
   });
+  testWidgets('view mode and sizes persist and list selection works',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await PreferencesStore.create();
+    await tester.pumpWidget(_harness(prefs));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('View options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('List'));
+    await tester.pumpAndSettle();
+    expect(prefs.viewMode, BrowserViewMode.list);
+    await tester.drag(find.byType(Slider), const Offset(70, 0));
+    await tester.pumpAndSettle();
+    expect(prefs.viewSize(BrowserViewMode.list), greaterThan(0.5));
+    expect(prefs.viewSize(BrowserViewMode.grid), 0.5);
+    await tester.tapAt(const Offset(10, 100));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsWidgets);
+    expect(tester.getTopLeft(find.text('b.txt')).dy,
+        greaterThan(tester.getTopLeft(find.text('a.txt')).dy));
+    await tester.longPress(find.text('a.txt'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.check_circle), findsWidgets);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(_harness(await PreferencesStore.create()));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsWidgets);
+    expect(prefs.viewMode, BrowserViewMode.list);
+  });
+  testWidgets('grid size changes column count and persists', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await PreferencesStore.create();
+    await tester.pumpWidget(_harness(prefs));
+    await tester.pumpAndSettle();
+    int columns() =>
+        (tester.widget<GridView>(find.byType(GridView)).gridDelegate
+                as SliverGridDelegateWithFixedCrossAxisCount)
+            .crossAxisCount;
+    expect(columns(), 3);
+    await tester.tap(find.byTooltip('View options'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(Slider), const Offset(180, 0));
+    await tester.pumpAndSettle();
+    expect(prefs.viewSize(BrowserViewMode.grid), greaterThan(0.5));
+    await tester.tapAt(const Offset(10, 100));
+    await tester.pumpAndSettle();
+    expect(columns(), 2);
+  });
 }
