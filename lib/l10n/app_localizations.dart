@@ -370,6 +370,30 @@ abstract class AppLocalizations {
   /// **'More options'**
   String get browserMoreOptionsTooltip;
 
+  /// No description provided for @browserViewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'View options'**
+  String get browserViewTooltip;
+
+  /// No description provided for @browserViewGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get browserViewGrid;
+
+  /// No description provided for @browserViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get browserViewList;
+
+  /// No description provided for @browserViewSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Item size'**
+  String get browserViewSize;
+
   /// Sort menu: by name
   ///
   /// In en, this message translates to:
