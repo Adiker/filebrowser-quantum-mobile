@@ -182,6 +182,17 @@ void main() {
         isTrue);
   });
 
+  test('an upload started without a source stays without one', () async {
+    final adapter = MockAdapter((_) => MockAdapter.json({}));
+    final client = FileBrowserClient(baseUrl: 'https://s.example', adapter: adapter)
+      ..adoptToken(_jwt);
+    final task = _task(client, await _tempFile(List.filled(25, 3)));
+    client.setSource('another-source');
+    await task.start();
+    expect(adapter.requests, isNotEmpty);
+    expect(adapter.requests.every((r) => !r.uri.queryParameters.containsKey('source')), isTrue);
+  });
+
   test('a failed pause signal restarts safely with the same session', () async {
     final adapter = MockAdapter((r) => r.uri.path.endsWith('/pause')
         ? MockAdapter.json({}, status: 503)

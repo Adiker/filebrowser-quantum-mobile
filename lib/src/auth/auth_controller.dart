@@ -168,6 +168,17 @@ class AuthController extends ChangeNotifier {
     _setStage(AuthStage.authenticated);
   }
 
+  /// Changes the browsing source without replacing the authenticated session.
+  Future<void> switchSource(String name) async {
+    final activeClient = client;
+    if (activeClient == null || activeClient.source == name) return;
+    await _prefs.setSourceName(name);
+    if (identical(client, activeClient)) {
+      activeClient.setSource(name);
+      notifyListeners();
+    }
+  }
+
   Future<void> signOut({bool forget = false}) async {
     if (forget) {
       await _store.clear();
