@@ -93,6 +93,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginValidationUrl => 'Enter a valid HTTP or HTTPS server URL';
 
   @override
+  String get loginHttpsFailedTitle => 'HTTPS connection failed';
+
+  @override
+  String loginHttpsFailedBody(String url) {
+    return 'Could not connect securely. You can try $url, but your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.';
+  }
+
+  @override
   String get loginHttpWarningTitle => 'Unencrypted connection';
 
   @override
