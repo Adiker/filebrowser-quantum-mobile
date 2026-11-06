@@ -34,6 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthController>();
     final loc = AppLocalizations.of(context);
     final url = _url.text;
+    final username = _user.text;
+    final password = _pass.text;
+    final hasScheme = url.trim().contains('://');
     var confirmed = false;
     if (Uri.parse(FileBrowserClient(baseUrl: url).baseUrl).scheme == 'http' &&
         !await auth.hasHttpConsent(url)) {
@@ -59,9 +62,48 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     await auth.beginSetup(
       baseUrl: url,
-      username: _user.text,
-      password: _pass.text,
+      username: username,
+      password: password,
       confirmHttp: confirmed,
+    );
+    if (!mounted ||
+        hasScheme ||
+        !auth.loginConnectionFailed ||
+        _url.text != url ||
+        _user.text != username ||
+        _pass.text != password) {
+      return;
+    }
+
+    final httpUrl = FileBrowserClient(baseUrl: 'http://${url.trim()}').baseUrl;
+    final useHttp = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(loc.loginHttpsFailedTitle),
+            content: Text(loc.loginHttpsFailedBody(httpUrl)),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(loc.loginHttpCancel)),
+              FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(loc.loginHttpConfirm)),
+            ],
+          ),
+        ) ??
+        false;
+    if (!mounted ||
+        !useHttp ||
+        _url.text != url ||
+        _user.text != username ||
+        _pass.text != password) {
+      return;
+    }
+    await auth.beginSetup(
+      baseUrl: httpUrl,
+      username: username,
+      password: password,
+      confirmHttp: true,
     );
   }
 
