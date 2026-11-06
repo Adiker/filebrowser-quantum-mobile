@@ -84,6 +84,12 @@
   "@lockUseDifferentServer": { "description": "Lock screen action to forget and set up another server" },
   "sourceSelectTitle": "Choose a source",
   "@sourceSelectTitle": { "description": "Source selection screen app bar title" },
+  "sourceChange": "Change source",
+  "sourceCurrent": "Current source: {name}",
+  "@sourceCurrent": { "placeholders": { "name": { "type": "String" } } },
+  "sourceLoadError": "Could not load sources. Please try again.",
+  "sourceChangeError": "Could not change source. Please try again.",
+  "sourceEmpty": "No sources are available.",
   "lockWithUser": "Lock ({username})",
   "@lockWithUser": {
     "description": "Lock action labelled with the signed-in username",

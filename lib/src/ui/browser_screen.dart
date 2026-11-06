@@ -289,6 +289,68 @@ class _BrowserScreenState extends State<BrowserScreen> {
     _open(parent == '.' ? '/' : parent);
   }
 
+  Future<void> _changeSource() async {
+    final client = _client;
+    final Future<Map<String, FbSource>?> sources =
+        client.listSources().then((value) => value, onError: (_) => null);
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_loc.sourceSelectTitle),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: FutureBuilder<Map<String, FbSource>?>(
+            future: sources,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.data == null) return Text(_loc.sourceLoadError);
+              final names = snapshot.data!.keys.toList()..sort();
+              if (names.isEmpty) return Text(_loc.sourceEmpty);
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: names.length,
+                itemBuilder: (context, index) {
+                  final name = names[index];
+                  return ListTile(
+                    title: Text(name),
+                    trailing:
+                        name == client.source ? const Icon(Icons.check) : null,
+                    onTap: () => Navigator.pop(dialogContext, name),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(_loc.actionCancel),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || selected == null || selected == client.source) return;
+    try {
+      await context.read<AuthController>().switchSource(selected);
+      if (!mounted ||
+          !identical(context.read<AuthController>().client, client)) {
+        return;
+      }
+      _selection.exit();
+      _visibleItems = const [];
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      _open('/');
+    } catch (_) {
+      if (mounted) {
+        showErrorSnackBar(
+            ScaffoldMessenger.of(context), _loc.sourceChangeError);
+      }
+    }
+  }
+
   // --- search ----------------------------------------------------------------
 
   /// Opens search scoped to the current directory and dispatches the picked hit
@@ -1116,6 +1178,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
               ));
             }
             if (v == 'shares') _openShares();
+            if (v == 'source') _changeSource();
             if (v == 'dlfolder') _setDownloadFolder();
             if (v == 'lock') context.read<AuthController>().signOut();
             if (v == 'forget') {
@@ -1123,6 +1186,20 @@ class _BrowserScreenState extends State<BrowserScreen> {
             }
           },
           itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'source',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(loc.sourceChange),
+                  if (_client.source != null)
+                    Text(loc.sourceCurrent(_client.source!),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
             PopupMenuItem(value: 'status', child: Text(loc.statusTitle)),
             PopupMenuItem(value: 'appearance', child: Text(loc.appearanceTitle)),
             PopupMenuItem(value: 'shares', child: Text(loc.sharesTitle)),
