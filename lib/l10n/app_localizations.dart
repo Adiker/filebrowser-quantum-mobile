@@ -1266,6 +1266,102 @@ abstract class AppLocalizations {
   /// **'Canceled'**
   String get transfersStatusCanceled;
 
+  /// No description provided for @appearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceTitle;
+
+  /// No description provided for @appearanceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get appearanceMode;
+
+  /// No description provided for @appearanceSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get appearanceSystem;
+
+  /// No description provided for @appearanceLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get appearanceLight;
+
+  /// No description provided for @appearanceDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get appearanceDark;
+
+  /// No description provided for @appearanceAmoled.
+  ///
+  /// In en, this message translates to:
+  /// **'AMOLED black'**
+  String get appearanceAmoled;
+
+  /// No description provided for @appearanceAmoledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a black background in dark mode'**
+  String get appearanceAmoledHint;
+
+  /// No description provided for @appearanceColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get appearanceColor;
+
+  /// No description provided for @appearanceDynamic.
+  ///
+  /// In en, this message translates to:
+  /// **'Material You (system colors)'**
+  String get appearanceDynamic;
+
+  /// No description provided for @appearanceDynamicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses indigo when system colors are unavailable'**
+  String get appearanceDynamicHint;
+
+  /// No description provided for @appearanceIndigo.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo'**
+  String get appearanceIndigo;
+
+  /// No description provided for @appearanceBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get appearanceBlue;
+
+  /// No description provided for @appearanceTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get appearanceTeal;
+
+  /// No description provided for @appearanceGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get appearanceGreen;
+
+  /// No description provided for @appearanceOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get appearanceOrange;
+
+  /// No description provided for @appearancePink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get appearancePink;
+
   /// Error shown (and copied) when video playback fails
   ///
   /// In en, this message translates to:

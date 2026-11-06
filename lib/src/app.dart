@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import 'auth/auth_controller.dart';
+import 'appearance.dart';
 import 'data/preferences_store.dart';
 import 'transfers/transfer_service.dart';
 import 'ui/browser_screen.dart';
@@ -20,6 +22,7 @@ class FileBrowserApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<PreferencesStore>.value(value: prefs),
+        ChangeNotifierProvider(create: (_) => AppearanceController(prefs)),
         Provider<TransferService>(
           create: (_) => TransferService()..init(),
           dispose: (_, service) => service.dispose(),
@@ -31,21 +34,19 @@ class FileBrowserApp extends StatelessWidget {
           )..bootstrap(),
         ),
       ],
-      child: MaterialApp(
-        onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: Colors.indigo,
-          useMaterial3: true,
+      child: Consumer<AppearanceController>(
+        builder: (context, appearance, _) => DynamicColorBuilder(
+          builder: (light, dark) => MaterialApp(
+            onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            debugShowCheckedModeBanner: false,
+            themeMode: appearance.themeMode,
+            theme: appearance.buildTheme(Brightness.light, light),
+            darkTheme: appearance.buildTheme(Brightness.dark, dark),
+            home: const _AuthGate(),
+          ),
         ),
-        darkTheme: ThemeData(
-          colorSchemeSeed: Colors.indigo,
-          brightness: Brightness.dark,
-          useMaterial3: true,
-        ),
-        home: const _AuthGate(),
       ),
     );
   }

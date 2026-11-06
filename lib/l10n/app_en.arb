@@ -555,6 +555,23 @@
   "transfersStatusCanceled": "Canceled",
   "@transfersStatusCanceled": { "description": "Transfer status: canceled by the user" },
 
+  "appearanceTitle": "Appearance",
+  "appearanceMode": "Theme",
+  "appearanceSystem": "System default",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark",
+  "appearanceAmoled": "AMOLED black",
+  "appearanceAmoledHint": "Use a black background in dark mode",
+  "appearanceColor": "Accent color",
+  "appearanceDynamic": "Material You (system colors)",
+  "appearanceDynamicHint": "Uses indigo when system colors are unavailable",
+  "appearanceIndigo": "Indigo",
+  "appearanceBlue": "Blue",
+  "appearanceTeal": "Teal",
+  "appearanceGreen": "Green",
+  "appearanceOrange": "Orange",
+  "appearancePink": "Pink",
+
   "videoCouldNotPlay": "Could not play video:\n{error}",
   "@videoCouldNotPlay": {
     "description": "Error shown (and copied) when video playback fails",
