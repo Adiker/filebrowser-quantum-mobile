@@ -175,6 +175,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browserMoreOptionsTooltip => 'More options';
 
   @override
+  String get browserViewTooltip => 'View options';
+
+  @override
+  String get browserViewGrid => 'Grid';
+
+  @override
+  String get browserViewList => 'List';
+
+  @override
+  String get browserViewSize => 'Item size';
+
+  @override
   String get sortName => 'Name';
 
   @override

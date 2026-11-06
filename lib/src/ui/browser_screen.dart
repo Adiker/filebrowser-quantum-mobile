@@ -20,6 +20,7 @@ import 'batch_ops.dart';
 import 'breadcrumbs.dart';
 import 'destination_picker.dart';
 import 'error_display.dart';
+import 'file_details_sheet.dart' show formatModified;
 import 'image_gallery_screen.dart';
 import 'item_actions.dart';
 import 'search_screen.dart';
@@ -46,6 +47,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
   late Future<FbResource> _listing;
   late SortKey _sortKey;
   late bool _sortAsc;
+  late BrowserViewMode _viewMode;
+  late double _gridSize;
+  late double _listSize;
 
   // Retained across rebuilds so the grid's scroll offset survives opening and
   // closing a media viewer (product item 2) and any incidental rebuild. See the
@@ -94,6 +98,72 @@ class _BrowserScreenState extends State<BrowserScreen> {
     _prefs.setSort(_sortKey, _sortAsc);
   }
 
+  void _showViewOptions() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, updateSheet) {
+          final loc = AppLocalizations.of(context);
+          final size =
+              _viewMode == BrowserViewMode.grid ? _gridSize : _listSize;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(loc.browserViewTooltip,
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  SegmentedButton<BrowserViewMode>(
+                    segments: [
+                      ButtonSegment(
+                          value: BrowserViewMode.grid,
+                          icon: const Icon(Icons.grid_view),
+                          label: Text(loc.browserViewGrid)),
+                      ButtonSegment(
+                          value: BrowserViewMode.list,
+                          icon: const Icon(Icons.view_list),
+                          label: Text(loc.browserViewList)),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (selection) {
+                      final mode = selection.single;
+                      setState(() => _viewMode = mode);
+                      updateSheet(() {});
+                      _prefs.setViewMode(mode);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(loc.browserViewSize),
+                  Slider(
+                    value: size,
+                    semanticFormatterCallback: (value) =>
+                        '${loc.browserViewSize}: ${(value * 100).round()}%',
+                    onChanged: (value) {
+                      setState(() {
+                        if (_viewMode == BrowserViewMode.grid) {
+                          _gridSize = value;
+                        } else {
+                          _listSize = value;
+                        }
+                      });
+                      updateSheet(() {});
+                    },
+                    onChangeEnd: (value) =>
+                        _prefs.setViewSize(_viewMode, value),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   PopupMenuItem<SortKey> _sortMenuItem(SortKey key, String label) {
     final active = _sortKey == key;
     return PopupMenuItem<SortKey>(
@@ -103,7 +173,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
           SizedBox(
             width: 22,
             child: active
-                ? Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward, size: 18)
+                ? Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 18)
                 : null,
           ),
           const SizedBox(width: 8),
@@ -137,6 +208,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
     final sort = _prefs.sort;
     _sortKey = sort.key;
     _sortAsc = sort.ascending;
+    _viewMode = _prefs.viewMode;
+    _gridSize = _prefs.viewSize(BrowserViewMode.grid);
+    _listSize = _prefs.viewSize(BrowserViewMode.list);
     _listing = _client.listDirectory(_path);
     // Rebuild the screen chrome (app bar / action bar) when selection changes.
     _selection.addListener(_onSelectionChanged);
@@ -146,7 +220,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
       for (final record in records) {
         if (_transferStatuses[record.id] == record.status) continue;
         if (record.isFailed) {
-          showErrorSnackBar(ScaffoldMessenger.of(context),
+          showErrorSnackBar(
+              ScaffoldMessenger.of(context),
               '${record.filename}: ${_loc.transfersStatusFailed}'
               '${record.errorMessage == null ? '' : ' (${record.errorMessage})'}');
         }
@@ -521,8 +596,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
       filename: '$base.zip',
       directory: choice.directory,
     );
-    messenger.showSnackBar(SnackBar(
-        content: Text(loc.browserDownloadingCountZip(names.length))));
+    messenger.showSnackBar(
+        SnackBar(content: Text(loc.browserDownloadingCountZip(names.length))));
   }
 
   Future<void> _moveOrCopySelected(TransferOp op) async {
@@ -669,7 +744,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
     try {
       final listing = await _client.listDirectory(_path);
       existing.addAll(listing.items.map((e) => e.name));
-    } catch (_) {/* best-effort: unknown names fall through to override=false */}
+    } catch (_) {
+      /* best-effort: unknown names fall through to override=false */
+    }
     if (!mounted) return;
     var effectiveFolder = folderName;
     var override = false;
@@ -874,8 +951,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
       // file-backed items (a stray text/link share) gets explicit feedback
       // rather than the app silently coming forward and doing nothing.
       if (shared.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_loc.browserOnlyFilesUpload)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_loc.browserOnlyFilesUpload)));
       }
       return;
     }
@@ -1018,7 +1095,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
               }
               if (snap.hasError) {
                 return CopyableErrorView(
-                    message: snap.error.toString(), onRetry: () => _open(_path));
+                    message: snap.error.toString(),
+                    onRetry: () => _open(_path));
               }
               final items = snap.data?.sortedBy(_sortKey, _sortAsc) ?? const [];
               // Cache for the contextual app bar / batch actions (see field).
@@ -1029,6 +1107,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
                 key: PageStorageKey<String>(_path),
                 items: items,
                 client: _client,
+                mode: _viewMode,
+                size: _viewMode == BrowserViewMode.grid ? _gridSize : _listSize,
                 controller: _scrollController,
                 selectionActive: selecting,
                 selectedPaths: _selection.selected,
@@ -1067,6 +1147,12 @@ class _BrowserScreenState extends State<BrowserScreen> {
             tooltip: loc.browserSearchTooltip,
             onPressed: _openSearch),
         _transfersAction(context),
+        IconButton(
+            icon: Icon(_viewMode == BrowserViewMode.grid
+                ? Icons.grid_view
+                : Icons.view_list),
+            tooltip: loc.browserViewTooltip,
+            onPressed: _showViewOptions),
         PopupMenuButton<SortKey>(
           icon: const Icon(Icons.sort),
           tooltip: loc.browserSortTooltip,
@@ -1089,7 +1175,9 @@ class _BrowserScreenState extends State<BrowserScreen> {
             if (v == 'source') _changeSource();
             if (v == 'dlfolder') _setDownloadFolder();
             if (v == 'lock') context.read<AuthController>().signOut();
-            if (v == 'forget') context.read<AuthController>().signOut(forget: true);
+            if (v == 'forget') {
+              context.read<AuthController>().signOut(forget: true);
+            }
           },
           itemBuilder: (_) => [
             PopupMenuItem(
@@ -1183,14 +1271,22 @@ class _BrowserScreenState extends State<BrowserScreen> {
         children: [
           _barAction(Icons.download_outlined, loc.actionDownload,
               has ? _downloadSelected : null),
-          _barAction(
-              Icons.share_outlined, loc.actionShare, has ? _shareSelected : null),
+          _barAction(Icons.share_outlined, loc.actionShare,
+              has ? _shareSelected : null),
           _barAction(Icons.drive_file_rename_outline, loc.actionRename,
               single && canModify ? _renameSelected : null),
-          _barAction(Icons.drive_file_move_outlined, loc.actionMove,
-              has && canModify ? () => _moveOrCopySelected(TransferOp.move) : null),
-          _barAction(Icons.copy_outlined, loc.actionCopy,
-              has && canModify ? () => _moveOrCopySelected(TransferOp.copy) : null),
+          _barAction(
+              Icons.drive_file_move_outlined,
+              loc.actionMove,
+              has && canModify
+                  ? () => _moveOrCopySelected(TransferOp.move)
+                  : null),
+          _barAction(
+              Icons.copy_outlined,
+              loc.actionCopy,
+              has && canModify
+                  ? () => _moveOrCopySelected(TransferOp.copy)
+                  : null),
           _barAction(Icons.delete_outline, loc.actionDelete,
               has && canModify ? _deleteSelected : null),
         ],
@@ -1255,6 +1351,8 @@ class _ResourceGrid extends StatelessWidget {
     super.key,
     required this.items,
     required this.client,
+    required this.mode,
+    required this.size,
     required this.controller,
     required this.selectionActive,
     required this.selectedPaths,
@@ -1264,6 +1362,8 @@ class _ResourceGrid extends StatelessWidget {
 
   final List<FbResource> items;
   final FileBrowserClient client;
+  final BrowserViewMode mode;
+  final double size;
   final ScrollController controller;
   final bool selectionActive;
   final Set<String> selectedPaths;
@@ -1272,24 +1372,46 @@ class _ResourceGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      controller: controller,
-      padding: const EdgeInsets.all(4),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-      ),
-      itemCount: items.length,
-      itemBuilder: (_, i) => _GalleryTile(
-        item: items[i],
-        client: client,
-        selectionActive: selectionActive,
-        selected: selectedPaths.contains(items[i].path),
-        onTap: () => onTap(items[i]),
-        onLongPress: () => onLongPress(items[i]),
-      ),
-    );
+    if (mode == BrowserViewMode.list) {
+      return ListView.builder(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: items.length,
+        itemBuilder: (context, i) => _ResourceListTile(
+          item: items[i],
+          client: client,
+          size: size,
+          selectionActive: selectionActive,
+          selected: selectedPaths.contains(items[i].path),
+          onTap: () => onTap(items[i]),
+          onLongPress: () => onLongPress(items[i]),
+        ),
+      );
+    }
+    return LayoutBuilder(builder: (context, constraints) {
+      final targetWidth = 96.0 + size * 64;
+      final columns =
+          ((constraints.maxWidth - 8) / targetWidth).floor().clamp(1, 1000);
+      return GridView.builder(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(4),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemCount: items.length,
+        itemBuilder: (_, i) => _GalleryTile(
+          item: items[i],
+          client: client,
+          selectionActive: selectionActive,
+          selected: selectedPaths.contains(items[i].path),
+          onTap: () => onTap(items[i]),
+          onLongPress: () => onLongPress(items[i]),
+        ),
+      );
+    });
   }
 }
 
@@ -1336,13 +1458,26 @@ class _GalleryTile extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              color: Colors.black54,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+              child: Text(item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ),
           if (item.isVideo)
             const Center(
               // Dark scrim disc behind the glyph so it stays visible over
               // light thumbnails.
               child: DecoratedBox(
-                decoration:
-                    BoxDecoration(color: Colors.black38, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                    color: Colors.black38, shape: BoxShape.circle),
                 child:
                     Icon(Icons.play_circle_fill, color: Colors.white, size: 40),
               ),
@@ -1350,7 +1485,7 @@ class _GalleryTile extends StatelessWidget {
         ],
       );
     } else {
-      content = _labelled(surface, _iconForType(item), item.name);
+      content = _labelled(surface, _resourceIcon(item), item.name);
     }
 
     final primary = Theme.of(context).colorScheme.primary;
@@ -1411,27 +1546,97 @@ class _GalleryTile extends StatelessWidget {
           children: [
             Icon(icon, size: 40),
             const SizedBox(height: 6),
-            Text(name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12)),
+            Flexible(
+                child: Text(name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12))),
           ],
         ),
       );
+}
 
-  IconData _iconForType(FbResource item) {
-    switch (item.type) {
-      case 'pdf':
-        return Icons.picture_as_pdf;
-      case 'text':
-      case 'textImmutable':
-        return Icons.description;
-      case 'audio':
-        return Icons.audiotrack;
-      default:
-        return Icons.insert_drive_file;
+IconData _resourceIcon(FbResource item) {
+  if (item.isDir) return Icons.folder;
+  return switch (item.type) {
+    'pdf' => Icons.picture_as_pdf,
+    'text' || 'textImmutable' => Icons.description,
+    'audio' => Icons.audiotrack,
+    _ => Icons.insert_drive_file,
+  };
+}
+
+class _ResourceListTile extends StatelessWidget {
+  const _ResourceListTile(
+      {required this.item,
+      required this.client,
+      required this.size,
+      required this.selectionActive,
+      required this.selected,
+      required this.onTap,
+      required this.onLongPress});
+
+  final FbResource item;
+  final FileBrowserClient client;
+  final double size;
+  final bool selectionActive;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimension = 36.0 + size * 36;
+    final color = Theme.of(context).colorScheme;
+    final metadata = <String>[
+      if (!item.isDir) formatBytes(item.size),
+      if (item.modifiedAt != null)
+        formatModified(
+            AppLocalizations.of(context), item.modifiedAt!.toLocal()),
+    ].join(' · ');
+    Widget leading = Icon(_resourceIcon(item), size: dimension * 0.72);
+    if (item.isImage || item.isVideo) {
+      leading = Stack(fit: StackFit.expand, children: [
+        CachedNetworkImage(
+          cacheManager: safeImageCache,
+          memCacheWidth: 192,
+          imageUrl: client.previewUri(item.path).toString(),
+          httpHeaders: client.authHeaders,
+          fit: BoxFit.cover,
+          placeholder: (_, __) =>
+              ColoredBox(color: color.surfaceContainerHighest),
+          errorWidget: (_, __, ___) =>
+              Icon(item.isVideo ? Icons.movie : Icons.broken_image),
+        ),
+        if (item.isVideo)
+          const Center(
+              child: Icon(Icons.play_circle_fill, color: Colors.white)),
+      ]);
     }
+    return Semantics(
+      selected: selected,
+      child: ListTile(
+        selected: selected,
+        selectedTileColor: color.primaryContainer,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: SizedBox(
+            width: dimension,
+            height: dimension,
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(4), child: leading)),
+        title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+        subtitle: metadata.isEmpty
+            ? null
+            : Text(metadata, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: selectionActive
+            ? Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: selected ? color.primary : color.outline)
+            : null,
+        onTap: onTap,
+        onLongPress: onLongPress,
+      ),
+    );
   }
 }
 
@@ -1447,4 +1652,3 @@ class _EmptyView extends StatelessWidget {
     );
   }
 }
-
