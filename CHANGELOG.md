@@ -1,9 +1,19 @@
 # Changelog
 
 All notable changes to this project are documented here. The release workflow
-(`.github/workflows/release.yml`) publishes a GitHub Release whenever the
-version in `pubspec.yaml` is bumped on `main`, and uses the matching `## x.y.z`
-section of this file as the release notes.
+(`.github/workflows/release.yml`) can publish a signed GitHub Release from the version in `pubspec.yaml` and
+uses the matching `## x.y.z` section of this file as the release notes.
+
+## 0.5.0
+
+- Switch between available file sources without signing out; uploads remain bound
+  to their original source.
+- Choose adjustable list or grid layouts, with view preferences saved locally.
+- Customize light, dark, or system appearance, AMOLED black, and accent colors
+  including Material You.
+- Offer a confirmed HTTP retry after an HTTPS connection failure for addresses
+  entered without a scheme; explicit HTTP connections still require consent.
+- Support File Browser Quantum 2.0.2 in the integration test environment.
 
 ## 0.4.1
 
