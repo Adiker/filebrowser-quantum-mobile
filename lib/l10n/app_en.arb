@@ -59,6 +59,13 @@
   "@loginValidationRequired": { "description": "Validator message for an empty required field" },
   "loginValidationUrl": "Enter a valid HTTP or HTTPS server URL",
   "@loginValidationUrl": { "description": "Validator message for an invalid server URL" },
+  "loginHttpsFailedTitle": "HTTPS connection failed",
+  "loginHttpsFailedBody": "Could not connect securely. You can try {url}, but your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.",
+  "@loginHttpsFailedBody": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
   "loginHttpWarningTitle": "Unencrypted connection",
   "loginHttpWarningBody": "Your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.",
   "loginHttpCancel": "Cancel",

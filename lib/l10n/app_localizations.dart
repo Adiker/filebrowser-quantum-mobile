@@ -262,6 +262,18 @@ abstract class AppLocalizations {
   /// **'Enter a valid HTTP or HTTPS server URL'**
   String get loginValidationUrl;
 
+  /// No description provided for @loginHttpsFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS connection failed'**
+  String get loginHttpsFailedTitle;
+
+  /// No description provided for @loginHttpsFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect securely. You can try {url}, but your password, session token, and files will be sent without encryption. Anyone able to observe this connection may read them. Continue only if you trust the network.'**
+  String loginHttpsFailedBody(String url);
+
   /// No description provided for @loginHttpWarningTitle.
   ///
   /// In en, this message translates to:
