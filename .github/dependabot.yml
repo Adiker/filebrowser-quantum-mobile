@@ -4,9 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    groups:
-      pub-minor-patch:
-        update-types: [minor, patch]
+    ignore:
+      # 4.0.6 needs a newer Dart SDK through material_ui. Revisit when
+      # Flutter/Dart is upgraded or a compatible version is identified.
+      - dependency-name: cached_network_image
+        versions: ["4.0.6"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -17,3 +19,11 @@ updates:
     directory: /android
     schedule:
       interval: weekly
+    ignore:
+      # AGP 9 needs a coordinated Gradle upgrade and Flutter plugin migration.
+      # Revisit both limits when the Android build supports AGP 9.
+      - dependency-name: com.android.application
+        versions: ["[9.0,)"]
+      # Gradle 9.6+ removes an internal API required by the current AGP 8.
+      - dependency-name: gradle-wrapper
+        versions: ["[9.6,)"]
