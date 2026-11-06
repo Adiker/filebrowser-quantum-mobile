@@ -16,6 +16,7 @@ import '../auth/auth_controller.dart';
 import '../data/preferences_store.dart';
 import '../transfers/transfer_record.dart';
 import '../transfers/transfer_service.dart';
+import 'appearance_screen.dart';
 import 'batch_ops.dart';
 import 'breadcrumbs.dart';
 import 'destination_picker.dart';
@@ -1023,6 +1024,11 @@ class _BrowserScreenState extends State<BrowserScreen> {
           tooltip: loc.browserMoreOptionsTooltip,
           onSelected: (v) {
             if (v == 'status') _openStatus();
+            if (v == 'appearance') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const AppearanceScreen(),
+              ));
+            }
             if (v == 'shares') _openShares();
             if (v == 'dlfolder') _setDownloadFolder();
             if (v == 'lock') context.read<AuthController>().signOut();
@@ -1030,6 +1036,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
           },
           itemBuilder: (_) => [
             PopupMenuItem(value: 'status', child: Text(loc.statusTitle)),
+            PopupMenuItem(value: 'appearance', child: Text(loc.appearanceTitle)),
             PopupMenuItem(value: 'shares', child: Text(loc.sharesTitle)),
             PopupMenuItem(
                 value: 'dlfolder', child: Text(loc.browserMenuDownloadFolder)),

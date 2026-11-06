@@ -2,6 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 
+enum AppearanceMode { system, light, dark }
+
+enum AppearanceColor { system, indigo, blue, teal, green, orange, pink }
+
 /// SharedPreferences-backed store for lightweight, non-secret UI preferences.
 ///
 /// Secrets (credentials, JWT) live in `SecureStore`; this holds only durable
@@ -20,6 +24,26 @@ class PreferencesStore {
   static const _kSortAsc = 'pref_sort_asc';
   static const _kDownloadDir = 'pref_download_dir';
   static const _kSourceName = 'pref_source_name';
+
+  AppearanceMode get appearanceMode => AppearanceMode.values.firstWhere(
+        (value) => value.name == _prefs.get('pref_appearance_mode'),
+        orElse: () => AppearanceMode.system,
+      );
+
+  Future<void> setAppearanceMode(AppearanceMode value) async =>
+      _prefs.setString('pref_appearance_mode', value.name);
+
+  AppearanceColor get appearanceColor => AppearanceColor.values.firstWhere(
+        (value) => value.name == _prefs.get('pref_appearance_color'),
+        orElse: () => AppearanceColor.system,
+      );
+
+  Future<void> setAppearanceColor(AppearanceColor value) async =>
+      _prefs.setString('pref_appearance_color', value.name);
+
+  bool get amoled => _prefs.get('pref_amoled') == true;
+
+  Future<void> setAmoled(bool value) async => _prefs.setBool('pref_amoled', value);
 
   /// Persisted sort column (defaults to [SortKey.name]).
   SortKey get sortKey {
