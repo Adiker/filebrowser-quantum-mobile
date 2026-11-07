@@ -318,13 +318,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browserVerbCopied => 'Copied';
 
   @override
-  String browserBatchFailedSummary(
-    String verb,
-    int succeeded,
-    int skipped,
-    int failedCount,
-    String failures,
-  ) {
+  String browserBatchFailedSummary(String verb, int succeeded, int skipped,
+      int failedCount, String failures) {
     return '$verb $succeeded, skipped $skipped; $failedCount failed:\n$failures';
   }
 
@@ -335,10 +330,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String browserBatchDoneSummary(
-    String verb,
-    int succeeded,
-    String skippedSuffix,
-  ) {
+      String verb, int succeeded, String skippedSuffix) {
     return '$verb $succeeded item(s)$skippedSuffix';
   }
 
@@ -795,4 +787,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String videoCouldNotPlay(String error) {
     return 'Could not play video:\n$error';
   }
+
+  @override
+  String get updateTitle => 'App updates';
+
+  @override
+  String get updateAutomatic => 'Check for updates automatically';
+
+  @override
+  String get updateAutomaticHint => 'Check GitHub while the app is in use';
+
+  @override
+  String get updateCheck => 'Check for updates';
+
+  @override
+  String get updateChecking => 'Checking for updates…';
+
+  @override
+  String get updateCurrent => 'Installed version';
+
+  @override
+  String get updateAvailable => 'Update available';
+
+  @override
+  String get updateLatest => 'You have the latest version.';
+
+  @override
+  String get updateDownload => 'Download update';
+
+  @override
+  String get updateCancel => 'Cancel download';
+
+  @override
+  String get updateInstall => 'Install update';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateOpen => 'View update';
+
+  @override
+  String get updatePermission =>
+      'Allow this app to install updates in Android settings, then return and tap Install update again.';
+
+  @override
+  String get updateError => 'Update failed';
+
+  @override
+  String get updateNotes => 'Release notes';
+
+  @override
+  String get updateSize => 'Download size';
+
+  @override
+  String get updateProgress => 'Downloading update…';
+
+  @override
+  String get updateTryAgain => 'Try again';
 }

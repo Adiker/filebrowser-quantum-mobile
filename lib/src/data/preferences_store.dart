@@ -30,6 +30,32 @@ class PreferencesStore {
   static const _kGridSize = 'pref_grid_size';
   static const _kListSize = 'pref_list_size';
 
+  bool get autoUpdateChecks => _prefs.getBool('auto_update_checks') ?? true;
+
+  Future<void> setAutoUpdateChecks(bool enabled) async =>
+      _prefs.setBool('auto_update_checks', enabled);
+
+  String? get downloadedUpdateVersion =>
+      _prefs.getString('downloaded_update_version');
+
+  Future<void> setDownloadedUpdateVersion(String? version) async {
+    if (version == null) {
+      await _prefs.remove('downloaded_update_version');
+    } else {
+      await _prefs.setString('downloaded_update_version', version);
+    }
+  }
+
+  DateTime? get lastUpdateCheck {
+    final timestamp = _prefs.getInt('last_update_check');
+    return timestamp == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(timestamp);
+  }
+
+  Future<void> setLastUpdateCheck(DateTime time) async =>
+      _prefs.setInt('last_update_check', time.millisecondsSinceEpoch);
+
   BrowserViewMode get viewMode => BrowserViewMode.values.firstWhere(
         (mode) => mode.name == _prefs.get(_kViewMode),
         orElse: () => BrowserViewMode.grid,
@@ -71,7 +97,8 @@ class PreferencesStore {
 
   bool get amoled => _prefs.get('pref_amoled') == true;
 
-  Future<void> setAmoled(bool value) async => _prefs.setBool('pref_amoled', value);
+  Future<void> setAmoled(bool value) async =>
+      _prefs.setBool('pref_amoled', value);
 
   /// Persisted sort column (defaults to [SortKey.name]).
   SortKey get sortKey {

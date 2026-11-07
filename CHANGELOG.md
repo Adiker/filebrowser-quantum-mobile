@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The release workflow
 (`.github/workflows/release.yml`) can publish a signed GitHub Release from the version in `pubspec.yaml` and
 uses the matching `## x.y.z` section of this file as the release notes.
 
+## Unreleased
+
+- Check GitHub for stable app updates, download and verify signed APKs, and
+  launch the Android installer with user confirmation. Remove downloaded APKs
+  after the update is installed.
+
 ## 0.5.0
 
 - Switch between available file sources without signing out; uploads remain bound

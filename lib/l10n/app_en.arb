@@ -589,5 +589,24 @@
   "@videoCouldNotPlay": {
     "description": "Error shown (and copied) when video playback fails",
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+  "updateTitle": "App updates",
+  "updateAutomatic": "Check for updates automatically",
+  "updateAutomaticHint": "Check GitHub while the app is in use",
+  "updateCheck": "Check for updates",
+  "updateChecking": "Checking for updates…",
+  "updateCurrent": "Installed version",
+  "updateAvailable": "Update available",
+  "updateLatest": "You have the latest version.",
+  "updateDownload": "Download update",
+  "updateCancel": "Cancel download",
+  "updateInstall": "Install update",
+  "updateLater": "Later",
+  "updateOpen": "View update",
+  "updatePermission": "Allow this app to install updates in Android settings, then return and tap Install update again.",
+  "updateError": "Update failed",
+  "updateNotes": "Release notes",
+  "updateSize": "Download size",
+  "updateProgress": "Downloading update…",
+  "updateTryAgain": "Try again"
 }

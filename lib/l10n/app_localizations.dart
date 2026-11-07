@@ -62,7 +62,7 @@ import 'app_localizations_en.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -85,11 +85,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
@@ -650,13 +650,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{verb} {succeeded}, skipped {skipped}; {failedCount} failed:\n{failures}'**
-  String browserBatchFailedSummary(
-    String verb,
-    int succeeded,
-    int skipped,
-    int failedCount,
-    String failures,
-  );
+  String browserBatchFailedSummary(String verb, int succeeded, int skipped,
+      int failedCount, String failures);
 
   /// Batch move/copy summary when the user aborted mid-batch
   ///
@@ -669,10 +664,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{verb} {succeeded} item(s){skippedSuffix}'**
   String browserBatchDoneSummary(
-    String verb,
-    int succeeded,
-    String skippedSuffix,
-  );
+      String verb, int succeeded, String skippedSuffix);
 
   /// Suffix appended to the batch success summary when items were skipped
   ///
@@ -1417,6 +1409,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not play video:\n{error}'**
   String videoCouldNotPlay(String error);
+
+  /// No description provided for @updateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App updates'**
+  String get updateTitle;
+
+  /// No description provided for @updateAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates automatically'**
+  String get updateAutomatic;
+
+  /// No description provided for @updateAutomaticHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check GitHub while the app is in use'**
+  String get updateAutomaticHint;
+
+  /// No description provided for @updateCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updateCheck;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updateChecking;
+
+  /// No description provided for @updateCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed version'**
+  String get updateCurrent;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// No description provided for @updateLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the latest version.'**
+  String get updateLatest;
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download update'**
+  String get updateDownload;
+
+  /// No description provided for @updateCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel download'**
+  String get updateCancel;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install update'**
+  String get updateInstall;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'View update'**
+  String get updateOpen;
+
+  /// No description provided for @updatePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow this app to install updates in Android settings, then return and tap Install update again.'**
+  String get updatePermission;
+
+  /// No description provided for @updateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed'**
+  String get updateError;
+
+  /// No description provided for @updateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Release notes'**
+  String get updateNotes;
+
+  /// No description provided for @updateSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Download size'**
+  String get updateSize;
+
+  /// No description provided for @updateProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get updateProgress;
+
+  /// No description provided for @updateTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get updateTryAgain;
 }
 
 class _AppLocalizationsDelegate
@@ -1444,9 +1550,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

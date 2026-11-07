@@ -23,6 +23,16 @@ and sideload it, or build from source (see [Build & run](#build--run)). You
 need a running [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser)
 server to connect to.
 
+### App updates
+
+The app checks GitHub for stable releases while it is in use, at most once per
+24 hours. Disable automatic checks or check manually under Status → App updates.
+You choose when to download and install; Android may ask you to allow this app
+to install packages. GitHub receives your IP address when checks or downloads
+are performed. The first version containing this feature must be installed
+manually. Future APKs must retain the same application ID and signing key and
+increase `versionCode` to update existing installations.
+
 ## Screenshots
 
 <p align="center">

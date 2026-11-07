@@ -20,6 +20,9 @@ dependencies:
   cached_network_image: ^3.4.0
   flutter_cache_manager: ^3.5.0
   http: ^1.6.0
+  crypto: ^3.0.8
+  package_info_plus: ^9.0.1
+  pub_semver: ^2.2.0
   photo_view: ^0.15.0
   video_player: ^2.9.0
   chewie: ^1.8.0
