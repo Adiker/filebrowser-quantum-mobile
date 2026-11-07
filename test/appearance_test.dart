@@ -2,6 +2,7 @@ import 'package:filebrowser_mobile/l10n/app_localizations.dart';
 import 'package:filebrowser_mobile/src/appearance.dart';
 import 'package:filebrowser_mobile/src/data/preferences_store.dart';
 import 'package:filebrowser_mobile/src/ui/appearance_screen.dart';
+import 'package:filebrowser_mobile/src/ui/anchored_choice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -30,42 +31,57 @@ void main() {
     expect(reopened.amoled, true);
   });
 
-  test('dynamic colors, fallback and AMOLED are applied to correct brightness',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    final appearance = AppearanceController(await PreferencesStore.create());
-    final dynamic = ColorScheme.fromSeed(seedColor: Colors.pink);
-    expect(
-        appearance.buildTheme(Brightness.light, dynamic).colorScheme, dynamic);
-    expect(appearance.buildTheme(Brightness.light, null).colorScheme,
-        ColorScheme.fromSeed(seedColor: Colors.indigo));
-    appearance.setAmoled(true);
-    expect(appearance.buildTheme(Brightness.dark, null).scaffoldBackgroundColor,
-        Colors.black);
-    expect(
+  test(
+    'dynamic colors, fallback and AMOLED are applied to correct brightness',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final appearance = AppearanceController(await PreferencesStore.create());
+      final dynamic = ColorScheme.fromSeed(seedColor: Colors.pink);
+      expect(
+        appearance.buildTheme(Brightness.light, dynamic).colorScheme,
+        dynamic,
+      );
+      expect(
+        appearance.buildTheme(Brightness.light, null).colorScheme,
+        ColorScheme.fromSeed(seedColor: Colors.indigo),
+      );
+      appearance.setAmoled(true);
+      expect(
+        appearance.buildTheme(Brightness.dark, null).scaffoldBackgroundColor,
+        Colors.black,
+      );
+      expect(
         appearance.buildTheme(Brightness.light, null).scaffoldBackgroundColor,
-        isNot(Colors.black));
-    appearance.setColor(AppearanceColor.teal);
-    expect(appearance.buildTheme(Brightness.light, dynamic).colorScheme,
-        ColorScheme.fromSeed(seedColor: Colors.teal));
-  });
+        isNot(Colors.black),
+      );
+      appearance.setColor(AppearanceColor.teal);
+      expect(
+        appearance.buildTheme(Brightness.light, dynamic).colorScheme,
+        ColorScheme.fromSeed(seedColor: Colors.teal),
+      );
+    },
+  );
 
-  testWidgets('settings update immediately, follow system and preserve route',
-      (tester) async {
+  testWidgets('settings update immediately, follow system and preserve route', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final controller = AppearanceController(await PreferencesStore.create());
-    await tester.pumpWidget(ChangeNotifierProvider.value(
-      value: controller,
-      child: Consumer<AppearanceController>(
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: controller,
+        child: Consumer<AppearanceController>(
           builder: (context, appearance, _) => MaterialApp(
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                themeMode: appearance.themeMode,
-                theme: appearance.buildTheme(Brightness.light, null),
-                darkTheme: appearance.buildTheme(Brightness.dark, null),
-                home: const AppearanceScreen(),
-              )),
-    ));
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            themeMode: appearance.themeMode,
+            theme: appearance.buildTheme(Brightness.light, null),
+            darkTheme: appearance.buildTheme(Brightness.dark, null),
+            home: const AppearanceScreen(),
+          ),
+        ),
+      ),
+    );
     await tester.tap(find.byType(SwitchListTile));
     await tester.pumpAndSettle();
     expect(controller.amoled, true);
@@ -73,23 +89,51 @@ void main() {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     await tester.pumpAndSettle();
     expect(
-        Theme.of(tester.element(find.byType(AppearanceScreen)))
-            .scaffoldBackgroundColor,
-        Colors.black);
-    await tester.tap(find.byType(DropdownButtonFormField<AppearanceMode>));
+      Theme.of(
+        tester.element(find.byType(AppearanceScreen)),
+      ).scaffoldBackgroundColor,
+      Colors.black,
+    );
+    await tester.tap(find.byType(AnchoredChoice<AppearanceMode>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Light').last);
     await tester.pumpAndSettle();
     expect(controller.mode, AppearanceMode.light);
     expect(find.byType(AppearanceScreen), findsOneWidget);
-    expect(Theme.of(tester.element(find.byType(AppearanceScreen))).brightness,
-        Brightness.light);
-    await tester.tap(find.byType(DropdownButtonFormField<AppearanceColor>));
+    expect(
+      Theme.of(tester.element(find.byType(AppearanceScreen))).brightness,
+      Brightness.light,
+    );
+    await tester.tap(find.byType(AnchoredChoice<AppearanceColor>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Teal').last);
     await tester.pumpAndSettle();
     expect(controller.color, AppearanceColor.teal);
-    expect((await PreferencesStore.create()).appearanceColor,
-        AppearanceColor.teal);
+    expect(
+      (await PreferencesStore.create()).appearanceColor,
+      AppearanceColor.teal,
+    );
+  });
+  testWidgets('choice menu stays anchored after choosing last option',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final controller = AppearanceController(await PreferencesStore.create());
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+      value: controller,
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: AppearanceScreen(),
+      ),
+    ));
+    final choice = find.byType(AnchoredChoice<AppearanceMode>);
+    await tester.tap(choice);
+    await tester.pumpAndSettle();
+    final firstPosition = tester.getTopLeft(find.text('System default').last);
+    await tester.tap(find.text('Dark').last);
+    await tester.pumpAndSettle();
+    await tester.tap(choice);
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.text('System default').last), firstPosition);
   });
 }
