@@ -168,4 +168,47 @@ void main() {
     await tester.pumpAndSettle();
     expect(columns(), 2);
   });
+  testWidgets('list size changes the height of the whole row', (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'pref_view_mode': 'list', 'pref_list_size': 0.0});
+    final prefs = await PreferencesStore.create();
+    await tester.pumpWidget(_harness(prefs));
+    await tester.pumpAndSettle();
+    double rowHeight() => tester
+        .getSize(find
+            .ancestor(of: find.text('a.txt'), matching: find.byType(ListTile))
+            .first)
+        .height;
+    final small = rowHeight();
+    await tester.tap(find.byTooltip('View options'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(Slider), const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(rowHeight(), greaterThan(small + 20));
+  });
+
+  testWidgets('every grid slider step produces a different column count',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(_harness(await PreferencesStore.create()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('View options'));
+    await tester.pumpAndSettle();
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.divisions, 2);
+    final counts = <int>[];
+    for (final value in [0.0, 0.5, 1.0]) {
+      slider.onChanged!(value);
+      await tester.pumpAndSettle();
+      final grid = tester.widget<GridView>(find.byType(GridView));
+      counts.add(
+          (grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount)
+              .crossAxisCount);
+    }
+    expect(counts, [4, 3, 2]);
+  });
 }

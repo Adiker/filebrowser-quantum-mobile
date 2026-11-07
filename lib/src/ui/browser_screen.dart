@@ -99,6 +99,18 @@ class _BrowserScreenState extends State<BrowserScreen> {
     _prefs.setSort(_sortKey, _sortAsc);
   }
 
+  static (int, int) _gridColumnRange(double width) {
+    final usable = (width - 8).clamp(1.0, double.infinity);
+    final min = (usable / 160).floor().clamp(1, 1000);
+    final max = (usable / 96).floor().clamp(min, 1000);
+    return (min, max);
+  }
+
+  static int _gridColumns(double width, double size) {
+    final (min, max) = _gridColumnRange(width);
+    return max - (size * (max - min)).round();
+  }
+
   void _showViewOptions() {
     showModalBottomSheet<void>(
       context: context,
@@ -108,6 +120,13 @@ class _BrowserScreenState extends State<BrowserScreen> {
           final loc = AppLocalizations.of(context);
           final size =
               _viewMode == BrowserViewMode.grid ? _gridSize : _listSize;
+          final (minColumns, maxColumns) = _gridColumnRange(
+            MediaQuery.sizeOf(context).width,
+          );
+          final steps = maxColumns - minColumns;
+          final sliderValue = _viewMode == BrowserViewMode.grid
+              ? (steps == 0 ? 0.0 : (size * steps).round() / steps)
+              : size;
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -115,19 +134,23 @@ class _BrowserScreenState extends State<BrowserScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(loc.browserViewTooltip,
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    loc.browserViewTooltip,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 16),
                   SegmentedButton<BrowserViewMode>(
                     segments: [
                       ButtonSegment(
-                          value: BrowserViewMode.grid,
-                          icon: const Icon(Icons.grid_view),
-                          label: Text(loc.browserViewGrid)),
+                        value: BrowserViewMode.grid,
+                        icon: const Icon(Icons.grid_view),
+                        label: Text(loc.browserViewGrid),
+                      ),
                       ButtonSegment(
-                          value: BrowserViewMode.list,
-                          icon: const Icon(Icons.view_list),
-                          label: Text(loc.browserViewList)),
+                        value: BrowserViewMode.list,
+                        icon: const Icon(Icons.view_list),
+                        label: Text(loc.browserViewList),
+                      ),
                     ],
                     selected: {_viewMode},
                     onSelectionChanged: (selection) {
@@ -140,19 +163,24 @@ class _BrowserScreenState extends State<BrowserScreen> {
                   const SizedBox(height: 16),
                   Text(loc.browserViewSize),
                   Slider(
-                    value: size,
+                    value: sliderValue,
+                    divisions: _viewMode == BrowserViewMode.grid && steps > 0
+                        ? steps
+                        : null,
                     semanticFormatterCallback: (value) =>
                         '${loc.browserViewSize}: ${(value * 100).round()}%',
-                    onChanged: (value) {
-                      setState(() {
-                        if (_viewMode == BrowserViewMode.grid) {
-                          _gridSize = value;
-                        } else {
-                          _listSize = value;
-                        }
-                      });
-                      updateSheet(() {});
-                    },
+                    onChanged: _viewMode == BrowserViewMode.grid && steps == 0
+                        ? null
+                        : (value) {
+                            setState(() {
+                              if (_viewMode == BrowserViewMode.grid) {
+                                _gridSize = value;
+                              } else {
+                                _listSize = value;
+                              }
+                            });
+                            updateSheet(() {});
+                          },
                     onChangeEnd: (value) =>
                         _prefs.setViewSize(_viewMode, value),
                   ),
@@ -1396,9 +1424,8 @@ class _ResourceGrid extends StatelessWidget {
       );
     }
     return LayoutBuilder(builder: (context, constraints) {
-      final targetWidth = 96.0 + size * 64;
       final columns =
-          ((constraints.maxWidth - 8) / targetWidth).floor().clamp(1, 1000);
+          _BrowserScreenState._gridColumns(constraints.maxWidth, size);
       return GridView.builder(
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(),
@@ -1623,25 +1650,36 @@ class _ResourceListTile extends StatelessWidget {
     }
     return Semantics(
       selected: selected,
-      child: ListTile(
-        selected: selected,
-        selectedTileColor: color.primaryContainer,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: SizedBox(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 72 + size * 48),
+        child: ListTile(
+          selected: selected,
+          selectedTileColor: color.primaryContainer,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          leading: SizedBox(
             width: dimension,
             height: dimension,
             child: ClipRRect(
-                borderRadius: BorderRadius.circular(4), child: leading)),
-        title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-        subtitle: metadata.isEmpty
-            ? null
-            : Text(metadata, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: selectionActive
-            ? Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: selected ? color.primary : color.outline)
-            : null,
-        onTap: onTap,
-        onLongPress: onLongPress,
+              borderRadius: BorderRadius.circular(4),
+              child: leading,
+            ),
+          ),
+          title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          subtitle: metadata.isEmpty
+              ? null
+              : Text(metadata, maxLines: 1, overflow: TextOverflow.ellipsis),
+          trailing: selectionActive
+              ? Icon(
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: selected ? color.primary : color.outline,
+                )
+              : null,
+          onTap: onTap,
+          onLongPress: onLongPress,
+        ),
       ),
     );
   }

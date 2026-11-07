@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../appearance.dart';
 import '../data/preferences_store.dart';
+import 'anchored_choice.dart';
 
 class AppearanceScreen extends StatelessWidget {
   const AppearanceScreen({super.key});
@@ -31,16 +32,14 @@ class AppearanceScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          DropdownButtonFormField<AppearanceMode>(
-            initialValue: appearance.mode,
-            decoration: InputDecoration(labelText: loc.appearanceMode),
-            items: [
+          AnchoredChoice<AppearanceMode>(
+            label: loc.appearanceMode,
+            value: appearance.mode,
+            choices: {
               for (final entry in modeNames.entries)
-                DropdownMenuItem(value: entry.key, child: Text(entry.value))
-            ],
-            onChanged: (value) {
-              if (value != null) appearance.setMode(value);
+                entry.key: Text(entry.value),
             },
+            onChanged: appearance.setMode,
           ),
           const SizedBox(height: 12),
           SwitchListTile(
@@ -51,33 +50,34 @@ class AppearanceScreen extends StatelessWidget {
             onChanged: appearance.setAmoled,
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<AppearanceColor>(
-            initialValue: appearance.color,
-            decoration: InputDecoration(labelText: loc.appearanceColor),
-            isExpanded: true,
-            items: [
+          AnchoredChoice<AppearanceColor>(
+            label: loc.appearanceColor,
+            value: appearance.color,
+            choices: {
               for (final entry in colorNames.entries)
-                DropdownMenuItem(
-                    value: entry.key,
-                    child: Row(children: [
-                      if (entry.key == AppearanceColor.system)
-                        const Icon(Icons.palette_outlined)
-                      else
-                        Icon(Icons.circle,
-                            color: AppearanceController.seedFor(entry.key)),
-                      const SizedBox(width: 12),
-                      Flexible(
-                          child: Text(entry.value,
-                              overflow: TextOverflow.ellipsis)),
-                    ]))
-            ],
-            onChanged: (value) {
-              if (value != null) appearance.setColor(value);
+                entry.key: Row(
+                  children: [
+                    if (entry.key == AppearanceColor.system)
+                      const Icon(Icons.palette_outlined)
+                    else
+                      Icon(
+                        Icons.circle,
+                        color: AppearanceController.seedFor(entry.key),
+                      ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
             },
+            onChanged: appearance.setColor,
           ),
           const SizedBox(height: 8),
-          Text(loc.appearanceDynamicHint,
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            loc.appearanceDynamicHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );

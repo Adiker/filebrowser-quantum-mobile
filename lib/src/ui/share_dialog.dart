@@ -7,6 +7,7 @@ import '../api/filebrowser_client.dart';
 import '../api/models.dart';
 import '../api/share_link.dart';
 import 'error_display.dart';
+import 'anchored_choice.dart';
 
 /// Opens the create-share flow for [item]: an options dialog (optional password,
 /// optional expiry) that, on confirm, calls [FileBrowserClient.createShare] and
@@ -66,19 +67,27 @@ Future<void> showShareResultDialog(
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(share.hasPassword ? Icons.lock : Icons.lock_open,
-                  size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+              Icon(
+                share.hasPassword ? Icons.lock : Icons.lock_open,
+                size: 16,
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
-              Text(share.hasPassword
-                  ? AppLocalizations.of(ctx).sharePasswordProtected
-                  : AppLocalizations.of(ctx).shareNoPassword),
+              Text(
+                share.hasPassword
+                    ? AppLocalizations.of(ctx).sharePasswordProtected
+                    : AppLocalizations.of(ctx).shareNoPassword,
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.schedule,
-                  size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.schedule,
+                size: 16,
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
               Flexible(child: Text(humanizeShareExpiry(share))),
             ],
@@ -98,14 +107,16 @@ Future<void> showShareResultDialog(
             Clipboard.setData(ClipboardData(text: url));
             ScaffoldMessenger.of(ctx).showSnackBar(
               SnackBar(
-                  content: Text(AppLocalizations.of(ctx).shareLinkCopied),
-                  duration: const Duration(seconds: 2)),
+                content: Text(AppLocalizations.of(ctx).shareLinkCopied),
+                duration: const Duration(seconds: 2),
+              ),
             );
           },
         ),
         FilledButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(ctx).actionDone)),
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(AppLocalizations.of(ctx).actionDone),
+        ),
       ],
     ),
   );
@@ -151,9 +162,11 @@ class _ShareOptionsDialogState extends State<_ShareOptionsDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.name,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            widget.name,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _password,
@@ -192,16 +205,13 @@ class _ShareOptionsDialogState extends State<_ShareOptionsDialog> {
                 const SizedBox(width: 12),
               ],
               Expanded(
-                child: DropdownButtonFormField<ShareExpiryUnit>(
-                  initialValue: _unit,
-                  decoration:
-                      InputDecoration(labelText: loc.shareDialogExpiryLabel),
-                  items: [
-                    for (final u in ShareExpiryUnit.values)
-                      DropdownMenuItem(value: u, child: Text(u.label)),
-                  ],
-                  onChanged: (u) =>
-                      setState(() => _unit = u ?? ShareExpiryUnit.never),
+                child: AnchoredChoice<ShareExpiryUnit>(
+                  label: loc.shareDialogExpiryLabel,
+                  value: _unit,
+                  choices: {
+                    for (final u in ShareExpiryUnit.values) u: Text(u.label),
+                  },
+                  onChanged: (u) => setState(() => _unit = u),
                 ),
               ),
             ],
@@ -210,8 +220,9 @@ class _ShareOptionsDialogState extends State<_ShareOptionsDialog> {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(loc.actionCancel)),
+          onPressed: () => Navigator.pop(context),
+          child: Text(loc.actionCancel),
+        ),
         FilledButton(
           onPressed: () {
             final amount = int.tryParse(_amount.text.trim()) ?? 0;

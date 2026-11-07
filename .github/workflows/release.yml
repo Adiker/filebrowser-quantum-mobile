@@ -51,7 +51,7 @@ jobs:
       - name: Check whether tag already exists
         id: exists
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+          if [ "${{ inputs.publish }}" = "true" ] && git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
             echo "released=true" >> "$GITHUB_OUTPUT"
             echo "tag ${{ steps.version.outputs.tag }} already exists — nothing to do"
           else
