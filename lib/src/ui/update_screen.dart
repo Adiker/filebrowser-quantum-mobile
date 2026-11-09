@@ -94,14 +94,14 @@ class UpdateScreen extends StatelessWidget {
                 child: Text(loc.updateCancel)),
           ] else if (update.apk == null)
             FilledButton.icon(
-                onPressed: update.download,
+                onPressed: update.checking ? null : update.download,
                 icon: const Icon(Icons.download),
                 label: Text(update.error == null
                     ? loc.updateDownload
                     : loc.updateTryAgain))
           else
             FilledButton.icon(
-                onPressed: update.install,
+                onPressed: update.checking ? null : update.install,
                 icon: const Icon(Icons.install_mobile),
                 label: Text(loc.updateInstall)),
           if (update.permissionRequired)

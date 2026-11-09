@@ -32,6 +32,38 @@ class UpdateRelease {
   final int size;
   final String sha256;
 
+  String toRecord() => jsonEncode({
+        'tag_name': 'v$version',
+        'draft': false,
+        'prerelease': false,
+        'body': notes,
+        'assets': [
+          {
+            'name': 'filebrowser-mobile-v$version.apk',
+            'state': 'uploaded',
+            'size': size,
+            'digest': 'sha256:$sha256',
+            'browser_download_url': url.toString(),
+          }
+        ],
+      });
+
+  static UpdateRelease fromRecord(String record) {
+    final data = jsonDecode(record);
+    if (data is! Map<String, dynamic> || data['body'] is! String) {
+      throw UpdateException('Invalid saved update metadata');
+    }
+    final result = parse(data, '0.0.0-0');
+    if (result == null) throw UpdateException('Invalid saved update version');
+    return result;
+  }
+
+  bool sameApk(UpdateRelease other) =>
+      version == other.version &&
+      size == other.size &&
+      sha256 == other.sha256 &&
+      url == other.url;
+
   static UpdateRelease? parse(Map<String, dynamic> json, String current) {
     if (json['draft'] != false || json['prerelease'] != false) {
       throw UpdateException('Not a stable release');
@@ -119,6 +151,19 @@ class UpdateService {
     await for (final entity in dir.list()) {
       if (entity is File) await entity.delete();
     }
+  }
+
+  Future<File?> verifiedDownload(UpdateRelease release) async {
+    final file =
+        File(path.join((await _directory()).path, 'updates', 'update.apk'));
+    if (!await file.exists() || await file.length() != release.size) {
+      return null;
+    }
+    if ((await sha256.bind(file.openRead()).first).toString() !=
+        release.sha256) {
+      return null;
+    }
+    return file;
   }
 
   void cancel() {

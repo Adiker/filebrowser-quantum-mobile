@@ -46,6 +46,16 @@ class PreferencesStore {
     }
   }
 
+  String? get downloadedUpdateRecord =>
+      _prefs.getString('downloaded_update_record');
+
+  Future<void> setDownloadedUpdateRecord(String? record) async {
+    final ok = record == null
+        ? await _prefs.remove('downloaded_update_record')
+        : await _prefs.setString('downloaded_update_record', record);
+    if (!ok) throw StateError('Could not persist update metadata');
+  }
+
   DateTime? get lastUpdateCheck {
     final timestamp = _prefs.getInt('last_update_check');
     return timestamp == null

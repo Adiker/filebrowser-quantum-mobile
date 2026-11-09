@@ -57,19 +57,59 @@ class UpdateController extends ChangeNotifier with WidgetsBindingObserver {
     if (!_disposed) await checkAutomatic();
   }
 
+  Future<void> _discardDownload() async {
+    // Clear metadata first: a failed file deletion must not resurrect an
+    // invalidated or superseded APK on a later launch.
+    await prefs.setDownloadedUpdateRecord(null);
+    await prefs.setDownloadedUpdateVersion(null);
+    await service.clearDownloads();
+  }
+
   Future<void> _loadVersion() async {
     try {
       currentVersion = await _version();
-      final target = prefs.downloadedUpdateVersion;
-      if (target != null &&
-          Version.parse(currentVersion) >= Version.parse(target)) {
-        // Keep the marker if cleanup fails so the next launch can retry.
+      final record = prefs.downloadedUpdateRecord;
+      final legacy = prefs.downloadedUpdateVersion;
+      UpdateRelease? saved;
+      if (record != null) {
+        try {
+          saved = UpdateRelease.fromRecord(record);
+        } catch (_) {
+          await _discardDownload();
+          _notify();
+          return;
+        }
+      }
+      Version? legacyVersion;
+      if (legacy != null) {
+        try {
+          legacyVersion = Version.parse(legacy);
+        } on FormatException {
+          // An invalid legacy marker cannot identify a trusted download.
+        }
+      }
+      final target = saved?.version ?? legacyVersion;
+      if (target != null && Version.parse(currentVersion) >= target) {
+        // Keep metadata if deletion fails so a later launch can retry.
         await service.clearDownloads();
+        await prefs.setDownloadedUpdateRecord(null);
         await prefs.setDownloadedUpdateVersion(null);
+      } else if (saved != null) {
+        final file = await service.verifiedDownload(saved);
+        if (file == null) {
+          await _discardDownload();
+        } else {
+          release = saved;
+          apk = file;
+          checked = true;
+        }
+      } else {
+        // Also removes partial downloads left behind by process termination.
+        await _discardDownload();
       }
       _notify();
     } catch (_) {
-      // Keep the marker and retry on the next launch if lookup or cleanup fails.
+      // Retry cleanup on the next launch if lookup or deletion fails.
     }
   }
 
@@ -106,11 +146,12 @@ class UpdateController extends ChangeNotifier with WidgetsBindingObserver {
       await prefs.setLastUpdateCheck(_clock());
       currentVersion = await _version();
       final found = await service.check(currentVersion);
-      if (release?.version != found?.version) {
+      final previous = release;
+      if (previous != null && (found == null || !previous.sameApk(found))) {
         apk = null;
         try {
-          await service.clearDownloads();
-        } catch (_) {/* Download will retry cleanup. */}
+          await _discardDownload();
+        } catch (_) {/* Cleanup will be retried before a new download. */}
       }
       release = found;
       dismissed = manual;
@@ -137,18 +178,20 @@ class UpdateController extends ChangeNotifier with WidgetsBindingObserver {
     await _initialization;
     if (_disposed) return;
     final target = release;
-    if (target == null || downloading) return;
+    if (target == null || downloading || checking) return;
     downloading = true;
     error = null;
     progress = 0;
     apk = null;
     _notify();
     try {
+      await prefs.setDownloadedUpdateRecord(null);
+      await prefs.setDownloadedUpdateVersion(null);
       final downloaded = await service.download(target, (value) {
         progress = value;
         _notify();
       });
-      await prefs.setDownloadedUpdateVersion(target.version.toString());
+      await prefs.setDownloadedUpdateRecord(target.toRecord());
       apk = downloaded;
     } catch (e) {
       error = e.toString();
@@ -160,7 +203,7 @@ class UpdateController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> install() async {
-    if (apk == null || release == null) return;
+    if (apk == null || release == null || checking || downloading) return;
     error = null;
     try {
       final result = await _channel.invokeMethod<String>('install', {
@@ -170,10 +213,10 @@ class UpdateController extends ChangeNotifier with WidgetsBindingObserver {
       permissionRequired = result == 'permission';
     } catch (e) {
       error = e.toString();
-      try {
-        await apk?.delete();
-      } catch (_) {/* It may already be gone. */}
       apk = null;
+      try {
+        await _discardDownload();
+      } catch (_) {/* Invalid metadata must not be restored on restart. */}
     }
     _notify();
   }
