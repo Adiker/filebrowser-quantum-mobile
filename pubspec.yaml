@@ -43,7 +43,7 @@ dependencies:
   file_picker: ^11.0.0
 
   # Hand a downloaded file off to a native Android app (PDF/text/audio/…)
-  open_filex: ^4.7.0
+  open_filex: ^5.0.0
 
   # System share-sheet: share-link URLs as text, and "send a copy" of files
   # fetched to the app cache (the plugin ships its own Android FileProvider,
