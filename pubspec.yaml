@@ -17,7 +17,7 @@ dependencies:
   dio: ^5.7.0
 
   # In-app media: gallery grid thumbnails, zoomable photo viewer, video player
-  cached_network_image: ^3.4.0
+  cached_network_image: ^4.0.6
   flutter_cache_manager: ^3.5.0
   http: ^1.6.0
   crypto: ^3.0.8
