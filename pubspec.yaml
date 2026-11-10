@@ -31,7 +31,7 @@ dependencies:
   flutter_secure_storage: ^10.3.1
 
   # Biometric / device-credential authentication
-  local_auth: ^2.3.0
+  local_auth: ^3.0.2
 
   # Background upload/download with a native foreground service + notifications
   background_downloader: ^9.5.5
