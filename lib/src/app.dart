@@ -9,6 +9,8 @@ import 'data/preferences_store.dart';
 import 'transfers/transfer_service.dart';
 import 'ui/browser_screen.dart';
 import 'ui/login_screen.dart';
+import 'ui/update_screen.dart';
+import 'update/update_controller.dart';
 
 class FileBrowserApp extends StatelessWidget {
   const FileBrowserApp({super.key, required this.prefs});
@@ -23,6 +25,8 @@ class FileBrowserApp extends StatelessWidget {
       providers: [
         Provider<PreferencesStore>.value(value: prefs),
         ChangeNotifierProvider(create: (_) => AppearanceController(prefs)),
+        ChangeNotifierProvider(
+            create: (_) => UpdateController(prefs), lazy: false),
         Provider<TransferService>(
           create: (_) => TransferService()..init(),
           dispose: (_, service) => service.dispose(),
@@ -37,6 +41,7 @@ class FileBrowserApp extends StatelessWidget {
       child: Consumer<AppearanceController>(
         builder: (context, appearance, _) => DynamicColorBuilder(
           builder: (light, dark) => MaterialApp(
+            navigatorKey: updateNavigatorKey,
             onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -44,6 +49,10 @@ class FileBrowserApp extends StatelessWidget {
             themeMode: appearance.themeMode,
             theme: appearance.buildTheme(Brightness.light, light),
             darkTheme: appearance.buildTheme(Brightness.dark, dark),
+            builder: (context, child) => Stack(children: [
+              if (child != null) child,
+              const UpdateBanner(),
+            ]),
             home: const _AuthGate(),
           ),
         ),

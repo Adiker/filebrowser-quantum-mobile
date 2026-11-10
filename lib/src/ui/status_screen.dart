@@ -7,6 +7,7 @@ import '../api/models.dart';
 import '../auth/auth_controller.dart';
 import 'error_display.dart';
 import 'shares_screen.dart';
+import 'update_screen.dart';
 
 /// Whether disk-usage figures are meaningful. A source that is unindexed (or
 /// reports no capacity) yields `total=0`, so a zero total means "unavailable"
@@ -79,6 +80,15 @@ class _StatusScreenState extends State<StatusScreen> {
             _section(loc.statusSectionServer),
             _serverCard(),
             const SizedBox(height: 24),
+            Card(
+                child: ListTile(
+              leading: const Icon(Icons.system_update),
+              title: Text(loc.updateTitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const UpdateScreen(),
+              )),
+            )),
             _actions(context),
           ],
         ),

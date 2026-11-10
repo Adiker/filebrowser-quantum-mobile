@@ -3,7 +3,7 @@
 **App:** File Browser Mobile (`com.filebrowser_quantum_mobile`)
 **Last updated:** 2026-07-28
 
-File Browser Mobile is a client app for self-hosted [FileBrowser Quantum](https://filebrowserquantum.com/) servers. It connects only to the server address you enter yourself.
+File Browser Mobile is a client app for self-hosted [FileBrowser Quantum](https://filebrowserquantum.com/) servers. It connects to the server address you enter and, when update checks are enabled or requested, to GitHub.
 
 ## Data we collect
 
@@ -20,11 +20,12 @@ All of this is deleted when you uninstall the app or clear its data.
 
 ## Network traffic
 
-The app communicates exclusively with the File Browser server you configure. There are no third-party servers, no telemetry endpoints, and no requests to the developer. The privacy of data on your server is governed by whoever operates that server — typically you.
+The app communicates with the File Browser server you configure. Update checks contact the GitHub API, and update downloads use GitHub and its asset hosting. GitHub receives your IP address and standard request information. Automatic checks can be disabled in App updates; manual checks still contact GitHub. No server credentials are sent to GitHub. There are no telemetry endpoints. The privacy of data on your server is governed by whoever operates that server — typically you.
 
 ## Permissions
 
-- **Internet** — to reach your server.
+- **Internet** — to reach your server and GitHub for updates.
+- **Install packages** — to request installation of an update after your confirmation. Android may ask you to allow this source.
 - **Biometrics** — optional app unlock.
 - **Notifications / foreground service** — progress for background uploads and downloads.
 

@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The release workflow
 (`.github/workflows/release.yml`) can publish a signed GitHub Release from the version in `pubspec.yaml` and
 uses the matching `## x.y.z` section of this file as the release notes.
 
+## 0.6.0
+
+- Check GitHub for stable app updates, download and verify signed APKs, and
+  launch the Android installer with user confirmation. Retain verified downloads
+  for retries and remove the APK after the update is installed.
+- Make grid-size choices produce distinct column counts and scale list rows
+  along with their contents.
+- Keep appearance and share-expiry menus anchored when choices change.
+
 ## 0.5.0
 
 - Switch between available file sources without signing out; uploads remain bound
