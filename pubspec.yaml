@@ -1,7 +1,7 @@
 name: filebrowser_mobile
 description: Android client for File Browser (self-hosted) with biometric login and background transfers.
 publish_to: "none"
-version: 0.5.0+6
+version: 0.6.0+7
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
