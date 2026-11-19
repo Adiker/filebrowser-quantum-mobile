@@ -32,5 +32,5 @@ body:
     id: logs
     attributes:
       label: Error text / logs
-      description: The app shows copyable errors — paste them here.
+      description: The app shows copyable errors — paste them here after removing passwords, tokens and private paths.
       render: text

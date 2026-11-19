@@ -1,300 +1,52 @@
-> Based on [jjshoots/filebrowser_mobile](https://github.com/jjshoots/filebrowser_mobile) and [rpmlourenco/filebrowser_mobile](https://github.com/rpmlourenco/filebrowser_mobile). This independent client has its own Android application ID; existing installations require a fresh sign-in.
+[Polski](README.pl.md)
 
-# Filebrowser Quantum — Android client (Flutter)
+# FileBrowser Quantum Mobile
 
 [![CI](https://github.com/Adiker/filebrowser-quantum-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/Adiker/filebrowser-quantum-mobile/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Adiker/filebrowser-quantum-mobile)](https://github.com/Adiker/filebrowser-quantum-mobile/releases/latest)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-An Android app for [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) —
-the self-hosted file browser / file manager for your own server or NAS. It pairs
-biometric-gated direct login with a full file-management UI: browse across one
-or more **sources**, multiselect batch operations, move/copy with conflict
-handling, search, share links, server status, background uploads/downloads,
-share-into-app, and open-with hand-off.
+An Android client for a self-hosted [FileBrowser Quantum](https://github.com/gtsteffaniak/filebrowser) server or NAS. Browse and manage files, transfer them, create share links, and view media from your device.
 
-Built and tested with **Flutter 3.44.4 / Dart 3.12** (`flutter analyze` is
-clean and the test suite is green).
+## Features
 
-## Install
+- Browse multiple sources, search, sort, select files and perform batch operations.
+- Upload and download files, share into the app, send copies to other apps, or create server share links.
+- View images, video and text; inspect file details and checksums.
+- Unlock saved credentials with the device authentication prompt when supported and check server status.
+- Check for stable app updates and choose when to install them.
 
-If available, grab the APK from the [latest release](https://github.com/Adiker/filebrowser-quantum-mobile/releases/latest)
-and sideload it, or build from source (see [Build & run](#build--run)). You
-need a running [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser)
-server to connect to.
+## Install and start
 
-### App updates
+1. Install the APK from the [latest release](https://github.com/Adiker/filebrowser-quantum-mobile/releases/latest), following Android's prompts.
+2. Enter the address and credentials of your running FileBrowser Quantum server. An address without a scheme defaults to HTTPS.
+3. Select a source if the server offers more than one, then browse your files.
 
-The app checks GitHub for stable releases while it is in use, at most once per
-24 hours. Disable automatic checks or check manually under Status → App updates.
-You choose when to download and install; Android may ask you to allow this app
-to install packages. GitHub receives your IP address when checks or downloads
-are performed. The first version containing this feature must be installed
-manually. Future APKs must retain the same application ID and signing key and
-increase `versionCode` to update existing installations.
+HTTP requires explicit confirmation and sends credentials and files without encryption. Direct username/password login is supported; interactive TOTP, OIDC, passkeys and proxy-based login are not. See the [installation guide](docs/en/installation.md) for updates, compatibility and connection details.
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/browser.png" width="24%" alt="Directory browser showing folders and files on a Filebrowser Quantum server"/>
-  <img src="docs/screenshots/gallery.png" width="24%" alt="Photo grid with image thumbnails and breadcrumb navigation"/>
-  <img src="docs/screenshots/viewer.png" width="24%" alt="Zoomable in-app image viewer streaming a photo from the server"/>
-  <img src="docs/screenshots/details.png" width="24%" alt="File details sheet with path, size, modified time, type, and on-demand checksum"/>
+  <img src="docs/screenshots/browser.png" width="24%" alt="File browser"/>
+  <img src="docs/screenshots/gallery.png" width="24%" alt="Image gallery"/>
+  <img src="docs/screenshots/viewer.png" width="24%" alt="Image viewer"/>
+  <img src="docs/screenshots/details.png" width="24%" alt="File details"/>
 </p>
 
-## Features
+## Documentation
 
-- **Login**
-  - **Direct login behind a biometric gate** — credentials live in the Android
-    Keystore / EncryptedSharedPreferences (`flutter_secure_storage`) and unlock
-    with fingerprint/face or device PIN (`local_auth`). After unlock the app
-    logs in directly via `POST /api/auth/login` (no WebView, no captcha) and
-    holds a Bearer JWT.
-  - **Token keep-alive** — the cached JWT is refreshed via `POST /api/auth/renew`
-    before it expires and on a 401 (one renew + replay per request), so day-to-day
-    use never re-prompts. An unrecoverable session simply re-runs the direct login
-    from the stored credentials.
-- **Multi-source** — quantum exposes one or more named sources. A single source
-  is auto-selected; with several, a source picker is shown and the choice is
-  remembered. Every path-scoped request carries the current `source`.
-- **Browse**
-  - Directory listing with **breadcrumb** navigation, switchable **list / grid** views and separately adjustable, persisted item sizes.
-  - **Persisted sort** by name / size / date (client-side, natural order),
-    remembered across launches (`shared_preferences`).
-  - **Multiselect** with batch **copy / move / delete / download**, plus a
-    **destination picker** for copy/move targets.
-  - **New folder** and single-item **rename**.
-- **Search** — search within the current source (minimum 3-character query).
-- **File details** — size, timestamps, and an on-demand **checksum**
-  (md5/sha1/sha256/sha512) fetched only when requested.
-- **Status page** — server **disk usage** (real disk used vs. capacity),
-  signed-in user, and server capabilities when available.
-- **Sharing** — every share surface (selection bar, per-item sheet, viewer
-  menus) offers two methods:
-  - **Share link** — create/list/delete public server share links, optional
-    password and expiry; the URL is handed to the system share sheet
-    (`share_plus`).
-  - **Send file(s)** — local copies passed to the system share sheet
-    (WhatsApp, email, …). Works for any number of files at once; the files are
-    fetched into the short-lived app cache first, with a confirmation above
-    100 MiB. Folders aren't sendable (they'd need a zip) — the option explains
-    why instead of disappearing.
-- **In-app media** — zoomable image gallery (`photo_view`,
-  `cached_network_image`) and a video player (`video_player` + `chewie`),
-  streaming from the resource download endpoint with a Bearer auth header.
-  Viewers (and the text viewer) carry the full per-item action menu — share,
-  download, open with, rename, delete — so nothing requires going back to the
-  grid.
-- **Transfers**
-  - **Background uploads/downloads** that keep running when the app is
-    backgrounded or closed, via a native foreground service with progress
-    notifications (`background_downloader`).
-  - **Resumable chunked uploads** for large files (> 10 MiB): sent as
-    sequential offset chunks (the same scheme quantum's web UI uses), with
-    graceful **pause/resume mid-file**, automatic retry of transient failures,
-    and exact progress. Small files go out as a single background POST.
-  - **Upload conflict handling** — existing remote paths are probed and you
-    choose overwrite / skip / keep-both.
-  - A dedicated **transfers screen** listening to live progress updates.
-  - **Share-into-app** — accept files/images/videos shared from other apps
-    (`SEND` / `SEND_MULTIPLE`), pick a destination, and upload.
-  - **Download save-location** picking and **open-with** hand-off to a native
-    app (`file_picker`, `open_filex`).
+| Topic | English | Polski |
+|---|---|---|
+| Installation, server connection and updates | [Installation](docs/en/installation.md) | [Instalacja](docs/pl/installation.md) |
+| File management, transfers and troubleshooting | [User guide](docs/en/user-guide.md) | [Przewodnik użytkownika](docs/pl/user-guide.md) |
+| Development, tests and releases | [Contributing](CONTRIBUTING.md) | — |
+| Technical design | [Architecture](ARCHITECTURE.md) | — |
+| Data and network access | [Privacy policy](PRIVACY.md) | — |
 
-## How it talks to the server
+See the [changelog](CHANGELOG.md) for release history. The documentation is available in English and Polish; this does not imply that the app itself supports both languages.
 
-All endpoints are under `/api`. `<S>` is the current source name; paths are
-passed as query parameters (not URL segments), and every path-scoped call carries
-`source=<S>`.
+## Origins and license
 
-| Action       | Request                                                                  |
-| ------------ | ------------------------------------------------------------------------ |
-| Login        | `POST /api/auth/login?username=<u>` , headers `X-Password`, `X-Secret` → JWT text |
-| Renew        | `POST /api/auth/renew` → JWT text                                         |
-| Sources      | `GET /api/settings/sources` → `{ "<S>": { used, usedAlt, total, … } }`    |
-| List dir     | `GET /api/resources?path=<p>&source=<S>` → `{folders[], files[]}`         |
-| Checksum     | `GET /api/resources?path=<p>&source=<S>&checksum=<algo>`                  |
-| Download     | `GET /api/resources/download?source=<S>&file=<p>` (repeat `file=` + `algo=zip` to bundle) |
-| Preview      | `GET /api/resources/preview?source=<S>&path=<p>&size=<small\|large\|original>` |
-| Upload       | `POST /api/resources?path=<p>&source=<S>&override=…`, raw bytes as the body |
-| Chunked upload | same POST with `X-File-Chunk-Offset` / `X-File-Total-Size` / `X-File-Upload-Session` headers per chunk; server finalizes on the last chunk |
-| Pause upload | `POST /api/resources/pause?path=<p>&source=<S>` (preserves the server-side partial for resume) |
-| New folder   | `POST /api/resources?path=<p>&source=<S>&isDir=true`                      |
-| Delete       | `DELETE /api/resources?path=<p>&source=<S>`                               |
-| Move / copy  | `PATCH /api/resources`, JSON `{action, items:[{fromSource,fromPath,toSource,toPath}], overwrite, rename}` |
-| Search       | `GET /api/tools/search?query=<q>&sources=<S>&scope=<base/>` → JSON array  |
-| Disk usage   | `GET /api/settings/sources` → per-source `usedAlt` / `total`             |
-| Shares       | `GET /api/share/list`, `GET/POST /api/share`, `DELETE /api/share?hash=…`  |
-| Settings     | `GET /api/settings` (admin-only capabilities/branding; degrades on 403)   |
+This independent client is based on [jjshoots/filebrowser_mobile](https://github.com/jjshoots/filebrowser_mobile) and [rpmlourenco/filebrowser_mobile](https://github.com/rpmlourenco/filebrowser_mobile). It has its own Android application ID, so existing installations of those apps require a fresh sign-in.
 
-All authenticated requests send the JWT in the `Authorization: Bearer <jwt>`
-header. Token renewal is handled by an interceptor that performs at most one
-renew + replay per request. Public share pages are served at
-`/public/share/<hash>`.
-
-## Project layout
-
-```
-lib/
-  main.dart
-  l10n/
-    app_en.arb                   # English source strings (gen_l10n template)
-    app_localizations*.dart      # generated — do not edit by hand
-  src/
-    app.dart                     # MaterialApp + auth gate (setup/lock/source/browser)
-    api/
-      models.dart                # FbResource, FbUser, FbUsage, FbShare, FbSource,
-                                 #   FbServerCaps/FbTusConfig, FbSearchResult
-      filebrowser_client.dart    # HTTP client: auth/renew, sources, list, download,
-                                 #   bundle, upload, move/copy, search, usage,
-                                 #   shares, settings, checksum
-      share_link.dart            # public share-link URL builder
-    auth/
-      secure_store.dart          # Keystore-backed credential storage
-      auth_controller.dart       # biometric gate + direct login + JWT lifecycle
-    data/
-      preferences_store.dart     # typed non-secret UI prefs (sort order, source)
-    transfers/
-      transfer_record.dart       # transfer model + progress state
-      transfer_service.dart      # background_downloader wrapper + updates
-    ui/
-      login_screen.dart          # first-run setup, biometric lock, SourceSelectScreen
-      browser_screen.dart        # directory browser
-      breadcrumbs.dart           # path breadcrumb bar
-      selection_controller.dart  # multiselect state
-      batch_ops.dart             # batch copy/move/delete/download
-      item_actions.dart          # shared per-item flows (download/open-with/
-                                 #   share/rename/delete) + viewer action menu
-      share_actions.dart         # pure share-method availability rules
-      destination_picker.dart    # folder picker for copy/move
-      search_screen.dart         # search within the source
-      file_details_sheet.dart    # details + on-demand checksum
-      status_screen.dart         # disk usage / user / server caps
-      shares_screen.dart         # list/delete shares
-      share_dialog.dart          # create share link (password/expiry)
-      upload_conflict.dart       # overwrite/skip/keep-both resolution
-      transfers_screen.dart      # live upload/download progress
-      image_gallery_screen.dart  # zoomable photo viewer
-      video_player_screen.dart   # in-app video playback
-      text_viewer_screen.dart    # selectable monospace text preview
-      error_display.dart         # copyable error view + retry
-```
-
-## Dependencies
-
-| Package                   | Purpose                                               |
-| ------------------------- | ----------------------------------------------------- |
-| `dio`                     | HTTP client + interceptors (auth/renew)               |
-| `cached_network_image`    | Gallery thumbnails / image caching                    |
-| `photo_view`              | Zoomable image viewer                                  |
-| `video_player` + `chewie` | In-app video playback                                 |
-| `flutter_secure_storage`  | Keystore-backed credential storage                    |
-| `local_auth`              | Biometric / device-credential unlock                  |
-| `background_downloader`   | Foreground-service uploads/downloads + notifications   |
-| `provider`                | State management / DI                                 |
-| `file_picker`             | File picking + SAF directory targets                  |
-| `open_filex`              | Open-with hand-off to native apps                     |
-| `share_plus`              | System share sheet: share-link URLs + sending file copies |
-| `shared_preferences`      | Typed non-secret UI preferences (sort order, source)  |
-| `receive_sharing_intent`  | Share-into-app (SEND / SEND_MULTIPLE)                 |
-| `path` / `path_provider`  | Path utilities + app directories                      |
-
-## Build & run
-
-```bash
-export PATH="$HOME/flutter/bin:$PATH"
-flutter pub get
-flutter analyze
-flutter test
-flutter run            # on a connected device/emulator
-flutter build apk      # release APK in build/app/outputs/flutter-apk/
-```
-
-The native `android/` project is committed and already configured (see below);
-no `flutter create` step is required.
-
-## Development & testing
-
-A `Makefile` wraps the common workflows (it prepends `$HOME/flutter/bin` to PATH
-when flutter isn't already resolvable):
-
-| Target         | What it does                                                      |
-| -------------- | ---------------------------------------------------------------- |
-| `make get`     | `flutter pub get`                                                |
-| `make analyze` | static analysis                                                  |
-| `make test`    | unit + widget tests (no server; integration tag excluded)        |
-| `make ci`      | `get` + `analyze` + `test` — mirrors the PR `unit` gate           |
-| `make serve`   | boot the official quantum test server on `:8080`                 |
-| `make e2e`     | serve + run the integration-tagged tests, then stop the server   |
-| `make clean`   | `flutter clean` + drop the test-server work dir                  |
-
-- **Unit / widget tests** live under `test/` and run with a bare `flutter test`.
-- **Integration tests** (`test/integration/quantum_api_test.dart`, tagged
-  `@Tags(['integration'])`) are pure-Dart API tests with no emulator: they point a
-  real `FileBrowserClient` at a running quantum server (`FB_TEST_URL`, default
-  `http://localhost:8080`) and exercise the migrated contracts end-to-end — login,
-  list, mkdir, upload, single + bundle download, checksum, copy/move/rename,
-  delete, 409 conflict, search, and share create/list/delete. They are
-  skip-by-default (`dart_test.yaml`) so a normal `flutter test` needs no server;
-  opt in with `flutter test --tags integration --run-skipped`.
-- **`tool/serve.sh {setup|run}`** downloads the official Quantum v2.0.2-stable binary by default (override with `FB_TEST_RELEASE`),
-  writes a config, seeds a small data tree, and runs the server on `:8080`. All
-  artifacts land under the gitignored `.quantum-test/`; set an absolute
-  `FB_TEST_WORK_DIR` to use an isolated database and configuration.
-- **GitHub Actions** (`.github/workflows/ci.yml`) runs on push/PR: a fast `unit`
-  job (pub get → analyze → `flutter test --exclude-tags integration`) and an
-  `integration` job that boots the quantum server via `tool/serve.sh` and runs the
-  integration-tagged tests against it.
-- **Localization** (`gen_l10n`): all user-facing strings live in
-  `lib/l10n/app_en.arb`; `flutter pub get` / `flutter gen-l10n` generates
-  `lib/l10n/app_localizations*.dart` (config in `l10n.yaml`). To add a locale,
-  copy `app_en.arb` → `app_<locale>.arb` (e.g. `app_de.arb`), translate the
-  values (keep the keys and `{placeholders}`), and re-run `flutter gen-l10n` —
-  the new locale is picked up automatically via
-  `AppLocalizations.supportedLocales`. Widget tests wrap screens with
-  `test/support/l10n.dart`'s `l10nWrap(...)` so the delegates are installed.
-
-## Android configuration (already present)
-
-`android/app/src/main/AndroidManifest.xml` ships with:
-
-- Permissions: `INTERNET`, `USE_BIOMETRIC`, `POST_NOTIFICATIONS`,
-  `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC` (the last two for the
-  `background_downloader` foreground service).
-- **Share-into-app intent filters** on `MainActivity`: `SEND` and `SEND_MULTIPLE`
-  for `image/*`, `video/*`, `audio/*`, and `application/*`.
-- HTTP connections are supported after explicit confirmation for the configured
-  server URL. Passwords, session tokens and file data are unencrypted over HTTP;
-  use a trusted network. URLs without a scheme default to HTTPS. API redirects
-  are rejected, including HTTPS-to-HTTP redirects. Backup and device-to-device
-  transfer are disabled because storage holds credentials.
-
-Authentication currently supports direct username/password login. The login
-screen does not support interactive TOTP, OIDC, passkeys, or proxy-based login.
-API redirects are blocked; image and Android background-transfer requests do not
-follow redirects, and Android video playback rejects cross-protocol redirects.
-HTTP media playback and background transfers require device testing.
-
-Signed APK builds run manually via the Release workflow and require the signing
-secrets documented in `.github/workflows/release.yml`. The APK is uploaded as a
-workflow artifact; publishing a GitHub Release requires selecting the publish
-option. No debug-signed APK should be distributed.
-
-`local_auth` requires the host Activity to extend `FlutterFragmentActivity`, and
-`minSdkVersion` is set to 23+ for biometrics — both are already configured.
-
-## Known device-only caveats
-
-- **Chunked uploads run in the app process.** Unlike the single-POST path
-  (which rides `background_downloader`'s foreground service), a chunked upload
-  needs the app alive; Android may stop it if the app is killed in the
-  background. A transport error mid-chunk makes the server discard its partial
-  file, so the automatic retry restarts from the beginning — only the graceful
-  in-app pause preserves the server-side partial for resume (the server has no
-  endpoint to query the server's offset).
-- **Downloads / save location** rely on Android SAF and scoped storage; the
-  exact destination depends on the folder you grant, and behaviour varies by
-  Android version.
-- **Share-into-app and open-with** depend on the device's installed apps and
-  Android intent routing; these flows are verified on a physical device, not in
-  the widget tests.
+[Apache License 2.0](LICENSE)

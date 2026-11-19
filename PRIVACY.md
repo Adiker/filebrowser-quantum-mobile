@@ -1,7 +1,7 @@
 # Privacy Policy
 
-**App:** File Browser Mobile (`com.filebrowser_quantum_mobile`)
-**Last updated:** 2026-07-28
+**App:** File Browser Mobile (`com.adiker.filebrowser_quantum_mobile`)
+**Last updated:** 2026-11-14
 
 File Browser Mobile is a client app for self-hosted [FileBrowser Quantum](https://filebrowserquantum.com/) servers. It connects to the server address you enter and, when update checks are enabled or requested, to GitHub.
 
@@ -14,9 +14,9 @@ None. The app has no analytics, no crash reporting, no advertising, and no track
 - **Server address and login credentials** — stored locally in Android's encrypted storage (Android Keystore via `flutter_secure_storage`) so you can sign in again without retyping them. They are sent to the server you configured over the connection you configured. HTTP sends credentials and files without encryption after your confirmation.
 - **Biometric unlock** — if you enable it, authentication is handled entirely by Android's system biometric prompt. The app never sees, stores, or transmits your fingerprint or face data.
 - **Preferences** (sort order, view settings) — stored locally.
-- **Downloaded files and cached thumbnails** — stored locally in the app's storage.
+- **Downloaded files and cached thumbnails** — stored on the device, including in app storage or a download location you choose.
 
-All of this is deleted when you uninstall the app or clear its data.
+App-private data is deleted when you uninstall the app or clear its data. Files saved to a location you selected outside app-private storage may remain and must be deleted separately.
 
 ## Network traffic
 
